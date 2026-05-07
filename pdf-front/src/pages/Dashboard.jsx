@@ -405,13 +405,16 @@ export default function Dashboard() {
     });
   };
 
-  // Rotate a page 90 degrees clockwise
-  const handleRotatePage = (id) => {
+  // Rotate a page 90 degrees clockwise or anticlockwise
+  const handleRotatePage = (id, direction = 'clockwise') => {
     setImages(prev => prev.map(img => {
       if (img.id === id) {
+        const delta = direction === 'clockwise' ? 90 : -90;
+        let nextRotation = ((img.rotation || 0) + delta) % 360;
+        if (nextRotation < 0) nextRotation += 360;
         return {
           ...img,
-          rotation: ((img.rotation || 0) + 90) % 360
+          rotation: nextRotation
         };
       }
       return img;

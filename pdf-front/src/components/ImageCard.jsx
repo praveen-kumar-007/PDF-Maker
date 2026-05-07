@@ -1,4 +1,4 @@
-import { Trash2, Crop, ArrowUp, ArrowDown, Eye, RotateCw, Copy, FileCode2 } from 'lucide-react';
+import { Trash2, Crop, ArrowUp, ArrowDown, Eye, RotateCw, RotateCcw, Copy, FileCode2 } from 'lucide-react';
 import { formatBytes } from '../utils/imageHelpers';
 import '../styles/ImageCard.css';
 
@@ -169,8 +169,16 @@ export default function ImageCard({
         <div className="action-btns-group">
           <button 
             type="button" 
+            className="card-action-btn rotate rotate-ccw" 
+            onClick={() => onRotate(img.id, 'anticlockwise')}
+            title="Rotate Page 90° Anticlockwise"
+          >
+            <RotateCcw size={13} />
+          </button>
+          <button 
+            type="button" 
             className="card-action-btn rotate" 
-            onClick={() => onRotate(img.id)}
+            onClick={() => onRotate(img.id, 'clockwise')}
             title="Rotate Page 90° Clockwise"
           >
             <RotateCw size={13} />
