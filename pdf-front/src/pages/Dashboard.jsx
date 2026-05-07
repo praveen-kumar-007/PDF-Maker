@@ -7,6 +7,12 @@ import CropModal from '../components/CropModal';
 import PreviewModal from '../components/PreviewModal';
 import { cropImageAtResolution } from '../utils/imageHelpers';
 import { generateClientPDF } from '../utils/pdfCompiler';
+import { 
+  saveFileToDB, 
+  getFileFromDB, 
+  deleteFileFromDB, 
+  clearAllFilesFromDB 
+} from '../utils/storageHelper';
 import '../styles/Dashboard.css';
 
 export default function Dashboard() {
@@ -16,18 +22,154 @@ export default function Dashboard() {
   const [isCompiling, setIsCompiling] = useState(false);
   const [compileStep, setCompileStep] = useState('');
   const [compileSuccess, setCompileSuccess] = useState(false);
+  const [isRestoringSession, setIsRestoringSession] = useState(true);
   
-  // Compiler settings
-  const [pageSizeSetting, setPageSizeSetting] = useState('original'); // 'original', 'a4', or 'letter'
-  const [marginSetting, setMarginSetting] = useState('standard'); // 'none', 'thin', or 'standard'
-  const [qualitySetting, setQualitySetting] = useState('original'); // 'original', 'balanced', 'compact'
-  const [watermarkText, setWatermarkText] = useState('');
-  const [watermarkColor, setWatermarkColor] = useState('#9ca3af');
-  const [watermarkOpacity, setWatermarkOpacity] = useState(0.25);
-  const [watermarkSize, setWatermarkSize] = useState(48);
-  const [addPageNumbers, setAddPageNumbers] = useState(false);
-  const [pageNumberPosition, setPageNumberPosition] = useState('center'); // 'left', 'center', 'right', 'top-right'
-  const [pdfFilename, setPdfFilename] = useState('Indocreonix_Compiled');
+  // Compiler settings - load from LocalStorage
+  const [pageSizeSetting, setPageSizeSetting] = useState(() => localStorage.getItem('indocreonix_pageSizeSetting') || 'original');
+  const [marginSetting, setMarginSetting] = useState(() => localStorage.getItem('indocreonix_marginSetting') || 'standard');
+  const [qualitySetting, setQualitySetting] = useState(() => localStorage.getItem('indocreonix_qualitySetting') || 'original');
+  const [watermarkText, setWatermarkText] = useState(() => localStorage.getItem('indocreonix_watermarkText') || '');
+  const [watermarkColor, setWatermarkColor] = useState(() => localStorage.getItem('indocreonix_watermarkColor') || '#9ca3af');
+  const [watermarkOpacity, setWatermarkOpacity] = useState(() => {
+    const val = localStorage.getItem('indocreonix_watermarkOpacity');
+    return val !== null ? parseFloat(val) : 0.25;
+  });
+  const [watermarkSize, setWatermarkSize] = useState(() => {
+    const val = localStorage.getItem('indocreonix_watermarkSize');
+    return val !== null ? parseInt(val, 10) : 48;
+  });
+  const [addPageNumbers, setAddPageNumbers] = useState(() => localStorage.getItem('indocreonix_addPageNumbers') === 'true');
+  const [pageNumberPosition, setPageNumberPosition] = useState(() => localStorage.getItem('indocreonix_pageNumberPosition') || 'center');
+  const [pdfFilename, setPdfFilename] = useState(() => localStorage.getItem('indocreonix_pdfFilename') || 'Indocreonix_Compiled');
+
+  // Restore session from Local Storage and IndexedDB on mount
+  useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        const metaStr = localStorage.getItem('indocreonix_images_meta');
+        if (!metaStr) {
+          setIsRestoringSession(false);
+          return;
+        }
+
+        const metaList = JSON.parse(metaStr);
+        if (!Array.isArray(metaList) || metaList.length === 0) {
+          setIsRestoringSession(false);
+          return;
+        }
+
+        setIsCompiling(true);
+        setCompileStep('Restoring your active session...');
+
+        const restoredImages = [];
+
+        for (const meta of metaList) {
+          let previewUrl = null;
+          let file = null;
+          let pdfSource = null;
+          let croppedUrl = null;
+          let croppedFile = null;
+
+          if (meta.isPdfPage) {
+            // Restore PDF page dependencies
+            const previewBlob = await getFileFromDB(`${meta.id}_previewBlob`);
+            const sourceBytes = await getFileFromDB(`${meta.id}_pdfSource`);
+
+            if (previewBlob) {
+              previewUrl = URL.createObjectURL(previewBlob);
+            }
+            if (sourceBytes) {
+              pdfSource = sourceBytes;
+            }
+          } else {
+            // Restore standard image file dependencies
+            const originalFile = await getFileFromDB(`${meta.id}_file`);
+            if (originalFile) {
+              file = originalFile;
+              previewUrl = URL.createObjectURL(originalFile);
+            }
+          }
+
+          // Restore crops if applied
+          const cropFile = await getFileFromDB(`${meta.id}_croppedFile`);
+          if (cropFile) {
+            croppedFile = cropFile;
+            croppedUrl = URL.createObjectURL(cropFile);
+          }
+
+          // Reconstitute only if files were successfully loaded
+          if (previewUrl || croppedUrl) {
+            restoredImages.push({
+              ...meta,
+              previewUrl,
+              file,
+              pdfSource,
+              croppedUrl,
+              croppedFile
+            });
+          }
+        }
+
+        setImages(restoredImages);
+      } catch (err) {
+        console.error('Session restoration failed:', err);
+      } finally {
+        setIsRestoringSession(false);
+        setIsCompiling(false);
+        setCompileStep('');
+      }
+    };
+
+    restoreSession();
+  }, []);
+
+  // Save settings to Local Storage whenever they change
+  useEffect(() => {
+    localStorage.setItem('indocreonix_pageSizeSetting', pageSizeSetting);
+    localStorage.setItem('indocreonix_marginSetting', marginSetting);
+    localStorage.setItem('indocreonix_qualitySetting', qualitySetting);
+    localStorage.setItem('indocreonix_watermarkText', watermarkText);
+    localStorage.setItem('indocreonix_watermarkColor', watermarkColor);
+    localStorage.setItem('indocreonix_watermarkOpacity', watermarkOpacity);
+    localStorage.setItem('indocreonix_watermarkSize', watermarkSize);
+    localStorage.setItem('indocreonix_addPageNumbers', addPageNumbers);
+    localStorage.setItem('indocreonix_pageNumberPosition', pageNumberPosition);
+    localStorage.setItem('indocreonix_pdfFilename', pdfFilename);
+  }, [
+    pageSizeSetting,
+    marginSetting,
+    qualitySetting,
+    watermarkText,
+    watermarkColor,
+    watermarkOpacity,
+    watermarkSize,
+    addPageNumbers,
+    pageNumberPosition,
+    pdfFilename
+  ]);
+
+  // Save images metadata to Local Storage whenever queue changes
+  useEffect(() => {
+    if (isRestoringSession) return;
+    
+    const serializable = images.map(img => ({
+      id: img.id,
+      name: img.name,
+      size: img.size,
+      type: img.type,
+      width: img.width,
+      height: img.height,
+      originalWidth: img.originalWidth,
+      originalHeight: img.originalHeight,
+      rotation: img.rotation,
+      isPdfPage: img.isPdfPage,
+      pageIndex: img.pageIndex,
+      cropBoxPercent: img.cropBoxPercent,
+      lastModified: img.lastModified
+    }));
+    
+    localStorage.setItem('indocreonix_images_meta', JSON.stringify(serializable));
+  }, [images, isRestoringSession]);
 
   // Clean up object URLs on unmount to prevent memory leaks
   useEffect(() => {
@@ -39,7 +181,7 @@ export default function Dashboard() {
       });
       urlsToRevoke.forEach(url => URL.revokeObjectURL(url));
     };
-  }, []);
+  }, [images]);
 
   // Handle adding new files (Images and PDFs)
   const handleImagesSelected = async (validFiles) => {
@@ -104,6 +246,10 @@ export default function Dashboard() {
               lastModified: file.lastModified || Date.now()
             };
 
+            // Save decompile artifacts securely inside IndexedDB
+            await saveFileToDB(`${newPdfPageObj.id}_previewBlob`, pageBlob);
+            await saveFileToDB(`${newPdfPageObj.id}_pdfSource`, arrayBuffer);
+
             setImages(prev => [...prev, newPdfPageObj]);
           }
         } else {
@@ -113,7 +259,7 @@ export default function Dashboard() {
           await new Promise((resolve) => {
             const img = new Image();
             img.src = previewUrl;
-            img.onload = () => {
+            img.onload = async () => {
               const newImageObj = {
                 id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 name: file.name,
@@ -130,6 +276,10 @@ export default function Dashboard() {
                 rotation: 0,
                 lastModified: file.lastModified || Date.now()
               };
+
+              // Store image file directly in IndexedDB
+              await saveFileToDB(`${newImageObj.id}_file`, file);
+
               setImages(prev => [...prev, newImageObj]);
               resolve();
             };
@@ -150,7 +300,13 @@ export default function Dashboard() {
   };
 
   // Remove an image from the queue with duplicate protection
-  const handleRemoveImage = (id) => {
+  const handleRemoveImage = async (id) => {
+    // Delete files from IndexedDB asynchronously to avoid blockages
+    await deleteFileFromDB(`${id}_file`);
+    await deleteFileFromDB(`${id}_previewBlob`);
+    await deleteFileFromDB(`${id}_pdfSource`);
+    await deleteFileFromDB(`${id}_croppedFile`);
+
     setImages(prev => {
       const target = prev.find(img => img.id === id);
       const remaining = prev.filter(img => img.id !== id);
@@ -206,18 +362,40 @@ export default function Dashboard() {
   };
 
   // Duplicate page inside queue
-  const handleDuplicatePage = (id) => {
-    setImages(prev => {
-      const index = prev.findIndex(img => img.id === id);
-      if (index === -1) return prev;
-      
-      const target = prev[index];
-      const duplicatedItem = {
-        ...target,
-        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name: target.name.includes('(Copy)') ? target.name : `${target.name} (Copy)`
-      };
+  const handleDuplicatePage = async (id) => {
+    let sourceId = id;
+    const index = images.findIndex(img => img.id === id);
+    if (index === -1) return;
+    
+    const target = images[index];
+    const newId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const duplicatedItem = {
+      ...target,
+      id: newId,
+      name: target.name.includes('(Copy)') ? target.name : `${target.name} (Copy)`
+    };
 
+    // Duplicate corresponding binary attachments inside IndexedDB
+    try {
+      if (target.isPdfPage) {
+        const previewBlob = await getFileFromDB(`${sourceId}_previewBlob`);
+        const sourceBytes = await getFileFromDB(`${sourceId}_pdfSource`);
+        if (previewBlob) await saveFileToDB(`${newId}_previewBlob`, previewBlob);
+        if (sourceBytes) await saveFileToDB(`${newId}_pdfSource`, sourceBytes);
+      } else {
+        const originalFile = await getFileFromDB(`${sourceId}_file`);
+        if (originalFile) await saveFileToDB(`${newId}_file`, originalFile);
+      }
+
+      if (target.croppedFile) {
+        const cropFile = await getFileFromDB(`${sourceId}_croppedFile`);
+        if (cropFile) await saveFileToDB(`${newId}_croppedFile`, cropFile);
+      }
+    } catch (dbErr) {
+      console.error('Failed to duplicate page assets:', dbErr);
+    }
+
+    setImages(prev => {
       const updated = [...prev];
       updated.splice(index + 1, 0, duplicatedItem);
       return updated;
@@ -243,11 +421,12 @@ export default function Dashboard() {
         targetImage.type
       );
 
-      // Clean up previous crop URL if not used by others
+      // Clean up previous crop URL and delete its IndexedDB entry if not used by others
       if (targetImage.croppedUrl && targetImage.croppedUrl.startsWith('blob:')) {
         const isCroppedUsedByOthers = images.some(img => img.id !== activeCropId && img.croppedUrl === targetImage.croppedUrl);
         if (!isCroppedUsedByOthers) {
           URL.revokeObjectURL(targetImage.croppedUrl);
+          await deleteFileFromDB(`${activeCropId}_croppedFile`);
         }
       }
 
@@ -255,6 +434,10 @@ export default function Dashboard() {
       const mimeType = 'image/png';
       const baseName = targetImage.name.substring(0, targetImage.name.lastIndexOf('.')) || targetImage.name;
       const croppedFilename = `cropped_${baseName}.png`;
+      const croppedFileObj = new File([blob], croppedFilename, { type: mimeType });
+
+      // Save new crop to IndexedDB
+      await saveFileToDB(`${activeCropId}_croppedFile`, croppedFileObj);
 
       setImages(prev => prev.map(img => {
         if (img.id === activeCropId) {
@@ -264,7 +447,7 @@ export default function Dashboard() {
             cropBoxPercent: cropBoxPercent,
             width: width,
             height: height,
-            croppedFile: new File([blob], croppedFilename, { type: mimeType })
+            croppedFile: croppedFileObj
           };
         }
         return img;
@@ -280,7 +463,10 @@ export default function Dashboard() {
     }
   };
 
-  const handleUndoCrop = (id) => {
+  const handleUndoCrop = async (id) => {
+    // Delete crop file from IndexedDB
+    await deleteFileFromDB(`${id}_croppedFile`);
+
     setImages(prev => prev.map(img => {
       if (img.id === id) {
         if (img.croppedUrl && img.croppedUrl.startsWith('blob:')) {
@@ -303,7 +489,10 @@ export default function Dashboard() {
   };
 
   // Queue reset
-  const handleResetQueue = () => {
+  const handleResetQueue = async () => {
+    // Completely wipe all files from IndexedDB database
+    await clearAllFilesFromDB();
+
     const urlsToRevoke = new Set();
     images.forEach(img => {
       if (img.previewUrl) urlsToRevoke.add(img.previewUrl);

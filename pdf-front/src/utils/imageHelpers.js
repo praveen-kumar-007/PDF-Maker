@@ -146,3 +146,64 @@ export const compressImage = (srcUrl, quality = 0.8, maxDimension = null) => {
     imgObj.onerror = (err) => reject(new Error('Failed to load image for compression: ' + err.message));
   });
 };
+
+/**
+ * Physically rotates an image's pixel grid on an offscreen canvas by a multiple of 90 degrees.
+ * Returns a new blob and rotated dimensions.
+ * @param {string} srcUrl
+ * @param {number} rotationAngle - 0, 90, 180, or 270
+ * @returns {Promise<{blob: Blob, width: number, height: number}>}
+ */
+export const rotateImageAtResolution = (srcUrl, rotationAngle) => {
+  return new Promise((resolve, reject) => {
+    if (!rotationAngle || rotationAngle % 360 === 0) {
+      // No rotation needed, return a clean load
+      const imgObj = new Image();
+      imgObj.src = srcUrl;
+      imgObj.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = imgObj.naturalWidth;
+        canvas.height = imgObj.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(imgObj, 0, 0);
+        canvas.toBlob((blob) => {
+          resolve({ blob, width: imgObj.naturalWidth, height: imgObj.naturalHeight });
+        }, 'image/png');
+      };
+      imgObj.onerror = reject;
+      return;
+    }
+
+    const imgObj = new Image();
+    imgObj.src = srcUrl;
+    imgObj.onload = () => {
+      const angleRad = (rotationAngle * Math.PI) / 180;
+      const is90or270 = rotationAngle === 90 || rotationAngle === 270;
+      
+      const canvas = document.createElement('canvas');
+      const width = is90or270 ? imgObj.naturalHeight : imgObj.naturalWidth;
+      const height = is90or270 ? imgObj.naturalWidth : imgObj.naturalHeight;
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      ctx.translate(width / 2, height / 2);
+      ctx.rotate(angleRad);
+      ctx.drawImage(imgObj, -imgObj.naturalWidth / 2, -imgObj.naturalHeight / 2);
+      
+      canvas.toBlob((blob) => {
+        if (!blob) return reject(new Error('Failed to rotate image pixels'));
+        resolve({
+          blob: blob,
+          width: width,
+          height: height
+        });
+      }, 'image/png');
+    };
+    imgObj.onerror = reject;
+  });
+};

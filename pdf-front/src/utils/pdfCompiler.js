@@ -1,5 +1,5 @@
 import { PDFDocument, degrees, rgb, StandardFonts } from 'pdf-lib';
-import { convertImageToCompatibleBytes, compressImage } from './imageHelpers';
+import { convertImageToCompatibleBytes, compressImage, rotateImageAtResolution } from './imageHelpers';
 
 /**
  * Advanced, premium client-side PDF document builder
@@ -123,6 +123,23 @@ export const generateClientPDF = async (images, settings, setStep) => {
       let finalWidth = img.width;
       let finalHeight = img.height;
 
+      let compileUrl = srcUrl;
+      let createdRotatedUrl = null;
+
+      // Physically rotate image pixels if there is user rotation
+      if (img.rotation && img.rotation % 360 !== 0) {
+        try {
+          setStep(`Physically rotating page ${i + 1} (${img.rotation}°)...`);
+          const rotated = await rotateImageAtResolution(srcUrl, img.rotation);
+          createdRotatedUrl = URL.createObjectURL(rotated.blob);
+          compileUrl = createdRotatedUrl;
+          finalWidth = rotated.width;
+          finalHeight = rotated.height;
+        } catch (rotErr) {
+          console.error('Physical rotation failed, falling back to upright:', rotErr);
+        }
+      }
+
       // Handle compression / optimization settings
       if (qualitySetting !== 'original') {
         try {
@@ -130,7 +147,7 @@ export const generateClientPDF = async (images, settings, setStep) => {
           const maxDim = qualitySetting === 'compact' ? 1200 : null;
           setStep(`Optimizing file size for page ${i + 1} (${qualitySetting} compression)...`);
           
-          const compressed = await compressImage(srcUrl, quality, maxDim);
+          const compressed = await compressImage(compileUrl, quality, maxDim);
           const arrayBuffer = await compressed.blob.arrayBuffer();
           const imageBytes = new Uint8Array(arrayBuffer);
           
@@ -144,7 +161,7 @@ export const generateClientPDF = async (images, settings, setStep) => {
 
       // If compression was original or failed, load original file bytes
       if (!pdfImage) {
-        const response = await fetch(srcUrl);
+        const response = await fetch(compileUrl);
         const arrayBuffer = await response.arrayBuffer();
         const imageBytes = new Uint8Array(arrayBuffer);
 
@@ -156,7 +173,7 @@ export const generateClientPDF = async (images, settings, setStep) => {
           }
         } catch (embedError) {
           setStep(`Standardizing raw bytes for [${img.name}]...`);
-          const fallbackBytes = await convertImageToCompatibleBytes(srcUrl, isPng);
+          const fallbackBytes = await convertImageToCompatibleBytes(compileUrl, isPng);
           pdfImage = await pdfDoc.embedPng(fallbackBytes);
         }
       }
@@ -169,10 +186,6 @@ export const generateClientPDF = async (images, settings, setStep) => {
           width: pdfImage.width,
           height: pdfImage.height
         });
-        
-        if (img.rotation) {
-          page.setRotation(degrees(img.rotation));
-        }
       } else {
         let baseWidth = 595.27;  // A4 Width
         let baseHeight = 841.89; // A4 Height
@@ -217,10 +230,11 @@ export const generateClientPDF = async (images, settings, setStep) => {
           width: drawWidth,
           height: drawHeight
         });
+      }
 
-        if (img.rotation) {
-          page.setRotation(degrees(img.rotation));
-        }
+      // Revoke temporary rotated Blob URLs to prevent memory leakage
+      if (createdRotatedUrl) {
+        URL.revokeObjectURL(createdRotatedUrl);
       }
     }
   }
