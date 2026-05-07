@@ -134,7 +134,7 @@ export const generateClientPDF = async (images, settings, setStep, onProgress) =
       }
     } else {
       // 2. Image page insertion
-      const isPng = img.croppedUrl ? true : img.type.toLowerCase().includes('png');
+      let isPng = img.croppedUrl ? true : img.type.toLowerCase().includes('png');
       let pdfImage;
       let finalWidth = img.width;
       let finalHeight = img.height;
@@ -154,6 +154,7 @@ export const generateClientPDF = async (images, settings, setStep, onProgress) =
           const filterBlob = await applyScannerFilterToImage(compileUrl, img.filter);
           filterAppliedUrl = URL.createObjectURL(filterBlob);
           compileUrl = filterAppliedUrl;
+          isPng = true; // Scanner filter outputs PNG
         } catch (filterErr) {
           console.error('Failed to apply scanner filter during compilation:', filterErr);
         }
@@ -172,6 +173,7 @@ export const generateClientPDF = async (images, settings, setStep, onProgress) =
           compileUrl = createdRotatedUrl;
           finalWidth = rotated.width;
           finalHeight = rotated.height;
+          isPng = true; // Rotation outputs PNG
         } catch (rotErr) {
           console.error('Physical rotation failed, falling back to upright:', rotErr);
         }
@@ -203,7 +205,7 @@ export const generateClientPDF = async (images, settings, setStep, onProgress) =
       // If compression was original or failed, load original file bytes
       if (!pdfImage) {
         let arrayBuffer;
-        const rawFile = img.croppedFile || img.file;
+        const rawFile = (createdRotatedUrl || filterAppliedUrl) ? null : (img.croppedFile || img.file);
         if (rawFile) {
           try {
             arrayBuffer = await rawFile.arrayBuffer();
