@@ -2,10 +2,17 @@ import { useRef, useState } from 'react';
 import { Upload, Info, Check, FolderOpen } from 'lucide-react';
 import '../styles/Dropzone.css';
 
+// Check if device is a mobile device (phone or tablet) to optimize input flow
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
 export default function Dropzone({ onImagesSelected, hasImages }) {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const fileInputRef = useRef(null);
   const folderInputRef = useRef(null);
+  const isMobile = isMobileDevice();
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -33,13 +40,22 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
   };
 
   const processFiles = (files) => {
-    const validFiles = files.filter(file => file.type.startsWith('image/') || file.type === 'application/pdf');
+    // Keep all types of image files (JPG, JPEG, PNG, WEBP, GIF, HEIC, etc.)
+    const validFiles = files.filter(file => file.type.startsWith('image/'));
     
     if (validFiles.length === 0) {
-      alert('Please upload valid image files (JPEG, PNG, WebP) or PDF documents.');
+      alert('Please upload valid image files.');
       return;
     }
     onImagesSelected(validFiles);
+  };
+
+  const handleDropzoneClick = (e) => {
+    // Prevent triggering default file input if clicking on/inside the upload buttons container
+    if (e.target.closest('.dropzone-buttons') || e.target.closest('button')) {
+      return;
+    }
+    fileInputRef.current?.click();
   };
 
   return (
@@ -49,9 +65,9 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={handleDropzoneClick}
       >
-        {/* Hidden File Input & Label */}
+        {/* Hidden File Input & Label - Optimized for direct image selection on mobile */}
         <label htmlFor="file-import-input" style={{ display: 'none' }}>Import files</label>
         <input 
           id="file-import-input"
@@ -60,12 +76,12 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
           type="file" 
           ref={fileInputRef} 
           multiple 
-          accept="image/*, application/pdf" 
+          accept="image/*" 
           onChange={handleFileSelect} 
           style={{ display: 'none' }} 
         />
         
-        {/* Hidden Folder Input & Label */}
+        {/* Hidden Folder Input & Label - Bypasses webkitdirectory on mobile to avoid broken SAF folder picker */}
         <label htmlFor="folder-import-input" style={{ display: 'none' }}>Import folder</label>
         <input 
           id="folder-import-input"
@@ -73,9 +89,8 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
           aria-label="Import folder"
           type="file" 
           ref={folderInputRef} 
-          webkitdirectory=""
-          directory=""
           multiple 
+          {...(!isMobile ? { webkitdirectory: "", directory: "" } : { accept: "image/*" })}
           onChange={handleFileSelect} 
           style={{ display: 'none' }} 
         />
@@ -85,7 +100,7 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
             <Upload className="dropzone-icon" />
           </div>
           <h3>Import Pages or Folders</h3>
-          <p>Supports full resolution JPG, PNG, WebP &amp; PDFs. Merge folders sorted by date modified.</p>
+          <p>Supports all types of images &amp; folders. Merge folders sorted by date modified.</p>
           
           <div className="dropzone-buttons">
             <button 
@@ -96,7 +111,7 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
                 fileInputRef.current?.click();
               }}
             >
-              Select Files
+              {isMobile ? 'Select Images' : 'Select Files'}
             </button>
             <button 
               type="button" 
@@ -107,7 +122,7 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
               }}
             >
               <FolderOpen size={13} style={{ marginRight: 6 }} />
-              Select Folder
+              {isMobile ? 'Select from Files' : 'Select Folder'}
             </button>
           </div>
         </div>
