@@ -49,26 +49,35 @@
 
 @media (max-width: 768px) {
   .app-container {
-    padding: 16px;
-    gap: 16px;
-  }
-  
-  .right-panel {
-    padding: 16px;
-    min-height: auto;
-    border-radius: 12px;
-    gap: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .app-container {
-    padding: 12px;
+    padding: 8px 0px !important;
     gap: 12px;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden;
+  }
+  
+  .main-header {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    padding: 16px 12px !important;
+  }
+
+  .left-panel {
+    width: 100% !important;
+    padding: 0 12px !important;
+    box-sizing: border-box;
+    gap: 12px !important;
   }
   
   .right-panel {
-    padding: 12px;
-    border-radius: 10px;
+    padding: 16px 12px !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    width: 100% !important;
+    box-sizing: border-box;
   }
 }

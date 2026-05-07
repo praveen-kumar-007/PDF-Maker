@@ -68,7 +68,7 @@
   font-size: 18px;
   font-weight: 600;
   margin: 0;
-  color: #fff;
+  color: var(--color-text-main);
 }
 
 .dropzone p {
@@ -80,23 +80,22 @@
 }
 
 .btn-upload {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: linear-gradient(135deg, #1a73e8, #4285f4);
+  border: none;
   color: #fff;
   font-family: var(--font-family);
   padding: 8px 20px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
   transition: var(--transition-smooth);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.18);
 }
 
 .btn-upload:hover {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  box-shadow: 0 4px 15px var(--color-primary-glow);
-  transform: translateY(-1px);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(26, 115, 232, 0.3);
 }
 
 .dropzone-buttons {
@@ -111,26 +110,26 @@
 .btn-folder {
   display: inline-flex;
   align-items: center;
-  background: rgba(139, 92, 246, 0.12);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  color: var(--color-primary-light);
+  background: linear-gradient(135deg, #34a853, #10b981) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(52, 168, 83, 0.18);
 }
 
 .btn-folder:hover {
-  background: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
-  color: #fff !important;
+  transform: translateY(-1.5px) !important;
+  box-shadow: 0 6px 18px rgba(52, 168, 83, 0.3) !important;
 }
 
-/* Remove direct hover styling of .btn-upload from .dropzone hover so they highlight independently */
+/* Keep premium gradients on dropzone hover */
 .dropzone:hover .btn-upload:not(:hover) {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #1a73e8, #4285f4);
+  opacity: 0.95;
 }
 
 .dropzone:hover .btn-folder:not(:hover) {
-  background: rgba(139, 92, 246, 0.18);
-  border-color: rgba(139, 92, 246, 0.4);
+  background: linear-gradient(135deg, #34a853, #10b981) !important;
+  opacity: 0.95;
 }
 
 /* Info Card */
@@ -151,7 +150,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #fff;
+  color: var(--color-text-main);
 }
 
 .info-icon {
@@ -243,7 +242,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .dropzone {
     padding: 24px 16px;
   }
