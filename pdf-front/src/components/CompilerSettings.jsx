@@ -1,17 +1,22 @@
 import { useState } from 'react';
 import { 
   Settings, RefreshCw, FileText, CheckCircle2, 
-  Lock, Hash, Sliders, Type, HelpCircle, Eye, EyeOff 
+  Lock, Hash, Sliders, Type, HelpCircle, Eye, EyeOff, Activity 
 } from 'lucide-react';
 import '../styles/CompilerSettings.css';
 
 export default function CompilerSettings({
+  images,
   pageSizeSetting,
   setPageSizeSetting,
   marginSetting,
   setMarginSetting,
-  qualitySetting,
-  setQualitySetting,
+  compressionMode,
+  setCompressionMode,
+  targetSizeMB,
+  setTargetSizeMB,
+  compressionPercent,
+  setCompressionPercent,
   watermarkText,
   setWatermarkText,
   watermarkColor,
@@ -31,6 +36,65 @@ export default function CompilerSettings({
   compileSuccess,
   onCompile
 }) {
+  // Analytics calculations
+  const calculateTelemetry = () => {
+    if (!images || images.length === 0) {
+      return { rawSizeMB: '0.00', estimatedSizeMB: '0.00', savingsPct: 0, savingsText: 'No assets loaded' };
+    }
+    
+    let totalRawBytes = images.reduce((sum, img) => sum + (img.size || 0), 0);
+    const rawSizeMB = (totalRawBytes / (1024 * 1024)).toFixed(2);
+    
+    let estSizeMBVal = 0;
+    if (compressionMode === 'original') {
+      const totalBytes = totalRawBytes + (images.length * 8000); // slight PDF markup overhead
+      estSizeMBVal = totalBytes / (1024 * 1024);
+    } else if (compressionMode === 'target-size') {
+      const limit = targetSizeMB ? parseFloat(targetSizeMB) : 0.5;
+      const rawMB = totalRawBytes / (1024 * 1024);
+      estSizeMBVal = rawMB < limit ? rawMB : limit;
+    } else {
+      // Percentage-based quality
+      const pct = compressionPercent / 100;
+      const compressionFactor = 0.05 + 0.75 * Math.pow(pct, 1.8);
+      const estimatedBytes = totalRawBytes * compressionFactor + (images.length * 8000);
+      estSizeMBVal = estimatedBytes / (1024 * 1024);
+    }
+
+    // Ensure estimated is never larger than raw in compression modes
+    if (compressionMode !== 'original' && estSizeMBVal > parseFloat(rawSizeMB)) {
+      estSizeMBVal = parseFloat(rawSizeMB);
+    }
+
+    const estimatedSizeMB = estSizeMBVal.toFixed(2);
+    
+    // Space savings percentage
+    const rawNum = parseFloat(rawSizeMB);
+    const estNum = parseFloat(estimatedSizeMB);
+    let savingsPct = 0;
+    let savingsText = 'Keeping pristine source scale';
+    
+    if (rawNum > 0 && estNum < rawNum) {
+      savingsPct = Math.round(((rawNum - estNum) / rawNum) * 100);
+      savingsText = `Saved ${Math.round((rawNum - estNum) * 1024)} KB payload`;
+    } else if (compressionMode === 'original') {
+      savingsPct = 0;
+      savingsText = 'Lossless output format';
+    } else {
+      savingsPct = 0;
+      savingsText = 'No reduction needed';
+    }
+
+    return {
+      rawSizeMB,
+      estimatedSizeMB,
+      savingsPct,
+      savingsText
+    };
+  };
+
+  const { rawSizeMB, estimatedSizeMB, savingsPct, savingsText } = calculateTelemetry();
+
   return (
     <div className="compiler-controls-panel card animate-slide-up">
       <div className="panel-title-row">
@@ -128,35 +192,88 @@ export default function CompilerSettings({
             <div className="toggle-group-three">
               <button 
                 type="button" 
-                className={`toggle-btn ${qualitySetting === 'original' ? 'active' : ''}`}
-                onClick={() => setQualitySetting('original')}
+                className={`toggle-btn ${compressionMode === 'original' ? 'active' : ''}`}
+                onClick={() => setCompressionMode('original')}
               >
                 Lossless (Original)
               </button>
               <button 
                 type="button" 
-                className={`toggle-btn ${qualitySetting === 'balanced' ? 'active' : ''}`}
-                onClick={() => setQualitySetting('balanced')}
-                title="80% Quality JPEG"
+                className={`toggle-btn ${compressionMode === 'target-size' ? 'active' : ''}`}
+                onClick={() => setCompressionMode('target-size')}
+                title="Target specific PDF size in MB"
               >
-                Balanced
+                Target File Size (MB)
               </button>
               <button 
                 type="button" 
-                className={`toggle-btn ${qualitySetting === 'compact' ? 'active' : ''}`}
-                onClick={() => setQualitySetting('compact')}
-                title="50% Quality JPEG + Downscale"
+                className={`toggle-btn ${compressionMode === 'percentage' ? 'active' : ''}`}
+                onClick={() => setCompressionMode('percentage')}
+                title="Compress by quality percentage scale"
               >
-                Compact (Small)
+                Custom Quality (%)
               </button>
             </div>
-            <p className="setting-desc">
-              {qualitySetting === 'original' 
-                ? 'Absolute original file byte insertion. Best for printing and highest fidelity.' 
-                : qualitySetting === 'balanced'
-                  ? 'Compresses photos to 80% JPEG. Greatly reduces size while keeping images very crisp.'
-                  : 'Compresses to 50% JPEG and caps dimensions at 1200px. Perfect for fast email and strict portal uploads.'}
-            </p>
+            
+            {compressionMode === 'original' && (
+              <p className="setting-desc animate-fade-in">
+                Absolute original file byte insertion. Best for printing and highest document fidelity.
+              </p>
+            )}
+
+            {compressionMode === 'target-size' && (
+              <div className="target-size-controls animate-fade-in">
+                <label htmlFor="targetSizeMB" className="setting-label-sub">Desired PDF Size</label>
+                <div className="input-with-addon">
+                  <input 
+                    id="targetSizeMB"
+                    name="targetSizeMB"
+                    type="number"
+                    step="0.05"
+                    min="0.1"
+                    max="100"
+                    placeholder="e.g. 0.5"
+                    value={targetSizeMB}
+                    onChange={(e) => setTargetSizeMB(e.target.value)}
+                    className="text-input-premium input-addon-field"
+                  />
+                  <span className="input-addon-text">MB</span>
+                </div>
+                <p className="setting-desc">
+                  Our compile engine will dynamically scale and compress each page to fit the final PDF under <strong>{targetSizeMB || '0.5'} MB</strong>. Great for portal uploads!
+                </p>
+              </div>
+            )}
+
+            {compressionMode === 'percentage' && (
+              <div className="percentage-controls animate-fade-in">
+                <div className="percentage-header-row">
+                  <span className="setting-label-sub">Quality Level Track</span>
+                  <span className="percentage-badge">{compressionPercent}% Quality</span>
+                </div>
+                <div className="slider-percentage-wrap">
+                  <input 
+                    type="range"
+                    min="10"
+                    max="100"
+                    step="1"
+                    value={compressionPercent}
+                    onChange={(e) => setCompressionPercent(parseInt(e.target.value, 10))}
+                    className="slider-percentage"
+                    style={{ '--slider-pct': `${compressionPercent}%` }}
+                  />
+                  <div className="slider-percentage-fill" style={{ width: `${compressionPercent}%` }}></div>
+                </div>
+                <div className="slider-labels">
+                  <span>10% (Smallest Size)</span>
+                  <span>50% (Balanced)</span>
+                  <span>100% (High Quality)</span>
+                </div>
+                <p className="setting-desc">
+                  Drag the line to adjust. Lower quality produces a significantly lighter file size but reduces resolution clarity.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -308,6 +425,33 @@ export default function CompilerSettings({
             <p className="setting-desc">
               Type a customized name for your PDF. Special characters will be automatically sanitized to ensure cross-system compatibility.
             </p>
+          </div>
+        </div>
+
+        {/* SECTION 5: Real-time Telemetry & Analytics */}
+        <div className="settings-section telemetry-section animate-fade-in">
+          <h4 className="section-title">
+            <Activity size={14} className="section-icon" />
+            <span>AeroEngine Real-Time Telemetry</span>
+          </h4>
+          <div className="telemetry-grid">
+            <div className="telemetry-card">
+              <span className="telemetry-lbl">Input PDF Weight</span>
+              <span className="telemetry-val">{rawSizeMB} MB</span>
+              <span className="telemetry-sub">{images.length} physical {images.length === 1 ? 'page asset' : 'page assets'}</span>
+            </div>
+            
+            <div className="telemetry-card highlight">
+              <span className="telemetry-lbl">Estimated Output Weight</span>
+              <span className="telemetry-val">{estimatedSizeMB} MB</span>
+              <span className="telemetry-sub">Predicted compiled size</span>
+            </div>
+
+            <div className="telemetry-card success">
+              <span className="telemetry-lbl">Space Efficiency</span>
+              <span className="telemetry-val">⚡ {savingsPct}% Saved</span>
+              <span className="telemetry-sub">{savingsText}</span>
+            </div>
           </div>
         </div>
       </div>

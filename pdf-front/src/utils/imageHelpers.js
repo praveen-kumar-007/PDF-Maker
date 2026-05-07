@@ -148,6 +148,79 @@ export const compressImage = (srcUrl, quality = 0.8, maxDimension = null) => {
 };
 
 /**
+ * Compresses and scales an image iteratively to fit within a target byte size.
+ * @param {string} srcUrl - Blob URL or Data URL of the source image
+ * @param {number} targetBytes - The desired maximum byte size for the image
+ * @returns {Promise<{blob: Blob, width: number, height: number, size: number}>}
+ */
+export const compressImageToTargetSize = (srcUrl, targetBytes) => {
+  return new Promise((resolve, reject) => {
+    const imgObj = new Image();
+    imgObj.src = srcUrl;
+    imgObj.onload = async () => {
+      const originalWidth = imgObj.naturalWidth;
+      const originalHeight = imgObj.naturalHeight;
+
+      // Quality and resolution combinations to try, sorted from highest quality/size to lowest
+      const attempts = [
+        { scale: 1.0, quality: 0.90 },
+        { scale: 1.0, quality: 0.80 },
+        { scale: 1.0, quality: 0.70 },
+        { scale: 0.85, quality: 0.70 },
+        { scale: 0.85, quality: 0.55 },
+        { scale: 0.70, quality: 0.60 },
+        { scale: 0.70, quality: 0.45 },
+        { scale: 0.55, quality: 0.50 },
+        { scale: 0.55, quality: 0.35 },
+        { scale: 0.40, quality: 0.40 },
+        { scale: 0.40, quality: 0.25 },
+        { scale: 0.30, quality: 0.25 },
+        { scale: 0.20, quality: 0.15 }
+      ];
+
+      let lastResult = null;
+
+      for (let i = 0; i < attempts.length; i++) {
+        const { scale, quality } = attempts[i];
+        const w = Math.round(originalWidth * scale);
+        const h = Math.round(originalHeight * scale);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(imgObj, 0, 0, w, h);
+
+        const blob = await new Promise((resolveBlob) => {
+          canvas.toBlob(resolveBlob, 'image/jpeg', quality);
+        });
+
+        if (!blob) continue;
+
+        lastResult = {
+          blob: blob,
+          width: w,
+          height: h,
+          size: blob.size
+        };
+
+        // If we hit our size target, we can return immediately
+        if (blob.size <= targetBytes) {
+          break;
+        }
+      }
+
+      if (lastResult) {
+        resolve(lastResult);
+      } else {
+        reject(new Error('Failed to compress image within target dimensions'));
+      }
+    };
+    imgObj.onerror = (err) => reject(new Error('Failed to load image for target compression: ' + err.message));
+  });
+};
+
+/**
  * Physically rotates an image's pixel grid on an offscreen canvas by a multiple of 90 degrees.
  * Returns a new blob and rotated dimensions.
  * @param {string} srcUrl

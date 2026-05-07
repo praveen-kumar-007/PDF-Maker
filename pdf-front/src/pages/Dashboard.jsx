@@ -67,7 +67,15 @@ export default function Dashboard() {
   // Compiler settings - load from LocalStorage
   const [pageSizeSetting, setPageSizeSetting] = useState(() => localStorage.getItem('indocreonix_pageSizeSetting') || 'original');
   const [marginSetting, setMarginSetting] = useState(() => localStorage.getItem('indocreonix_marginSetting') || 'standard');
-  const [qualitySetting, setQualitySetting] = useState(() => localStorage.getItem('indocreonix_qualitySetting') || 'original');
+  const [compressionMode, setCompressionMode] = useState(() => localStorage.getItem('indocreonix_compressionMode') || 'original');
+  const [targetSizeMB, setTargetSizeMB] = useState(() => {
+    const val = localStorage.getItem('indocreonix_targetSizeMB');
+    return val !== null ? val : '';
+  });
+  const [compressionPercent, setCompressionPercent] = useState(() => {
+    const val = localStorage.getItem('indocreonix_compressionPercent');
+    return val !== null ? parseInt(val, 10) : 50;
+  });
   const [watermarkText, setWatermarkText] = useState(() => localStorage.getItem('indocreonix_watermarkText') || '');
   const [watermarkColor, setWatermarkColor] = useState(() => localStorage.getItem('indocreonix_watermarkColor') || '#9ca3af');
   const [watermarkOpacity, setWatermarkOpacity] = useState(() => {
@@ -167,7 +175,9 @@ export default function Dashboard() {
   useEffect(() => {
     localStorage.setItem('indocreonix_pageSizeSetting', pageSizeSetting);
     localStorage.setItem('indocreonix_marginSetting', marginSetting);
-    localStorage.setItem('indocreonix_qualitySetting', qualitySetting);
+    localStorage.setItem('indocreonix_compressionMode', compressionMode);
+    localStorage.setItem('indocreonix_targetSizeMB', targetSizeMB);
+    localStorage.setItem('indocreonix_compressionPercent', compressionPercent);
     localStorage.setItem('indocreonix_watermarkText', watermarkText);
     localStorage.setItem('indocreonix_watermarkColor', watermarkColor);
     localStorage.setItem('indocreonix_watermarkOpacity', watermarkOpacity);
@@ -178,7 +188,9 @@ export default function Dashboard() {
   }, [
     pageSizeSetting,
     marginSetting,
-    qualitySetting,
+    compressionMode,
+    targetSizeMB,
+    compressionPercent,
     watermarkText,
     watermarkColor,
     watermarkOpacity,
@@ -587,7 +599,9 @@ export default function Dashboard() {
       const compilerSettings = {
         pageSizeSetting,
         marginSetting,
-        qualitySetting,
+        compressionMode,
+        targetSizeMB,
+        compressionPercent,
         watermarkText,
         watermarkColor,
         watermarkOpacity,
@@ -681,12 +695,17 @@ export default function Dashboard() {
 
           {images.length > 0 && (
             <CompilerSettings 
+              images={images}
               pageSizeSetting={pageSizeSetting}
               setPageSizeSetting={setPageSizeSetting}
               marginSetting={marginSetting}
               setMarginSetting={setMarginSetting}
-              qualitySetting={qualitySetting}
-              setQualitySetting={setQualitySetting}
+              compressionMode={compressionMode}
+              setCompressionMode={setCompressionMode}
+              targetSizeMB={targetSizeMB}
+              setTargetSizeMB={setTargetSizeMB}
+              compressionPercent={compressionPercent}
+              setCompressionPercent={setCompressionPercent}
               watermarkText={watermarkText}
               setWatermarkText={setWatermarkText}
               watermarkColor={watermarkColor}

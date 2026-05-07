@@ -2,9 +2,9 @@
 
 /* Dashboard Layout Grid rules */
 .app-container {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 24px;
+  padding: 24px 48px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -14,8 +14,8 @@
 
 .dashboard {
   display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 24px;
+  grid-template-columns: 420px 1fr;
+  gap: 32px;
   align-items: start;
 }
 

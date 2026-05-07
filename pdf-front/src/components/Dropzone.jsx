@@ -83,7 +83,7 @@ export default function Dropzone({ onImagesSelected, hasImages, onError }) {
           style={{ display: 'none' }} 
         />
         
-        {/* Hidden Folder Input & Label - Enforces directory upload on desktop, falls back to multiple images on mobile */}
+        {/* Hidden Folder Input & Label - Enforces directory upload on desktop, opens Google Files / File Explorer on mobile */}
         <label htmlFor="folder-import-input" style={{ display: 'none' }}>Import folder</label>
         <input 
           id="folder-import-input"
@@ -94,7 +94,7 @@ export default function Dropzone({ onImagesSelected, hasImages, onError }) {
           webkitdirectory="true"
           directory="true"
           multiple 
-          accept="image/*"
+          accept="*/*"
           onChange={handleFileSelect} 
           style={{ display: 'none' }} 
         />

@@ -1,5 +1,5 @@
 import { PDFDocument, degrees, rgb, StandardFonts } from 'pdf-lib';
-import { convertImageToCompatibleBytes, compressImage, rotateImageAtResolution, applyScannerFilterToImage } from './imageHelpers';
+import { convertImageToCompatibleBytes, compressImage, compressImageToTargetSize, rotateImageAtResolution, applyScannerFilterToImage } from './imageHelpers';
 
 /**
  * Advanced, premium client-side PDF document builder
@@ -22,7 +22,9 @@ export const generateClientPDF = async (images, settings, setStep, onProgress) =
   const {
     pageSizeSetting = 'original',
     marginSetting = 'standard',
-    qualitySetting = 'original',
+    compressionMode = 'original',
+    targetSizeMB = 0.5,
+    compressionPercent = 50,
     watermarkText = '',
     watermarkColor = '#e0e0e0',
     watermarkOpacity = 0.3,
@@ -180,23 +182,47 @@ export const generateClientPDF = async (images, settings, setStep, onProgress) =
       }
 
       // Handle compression / optimization settings
-      if (qualitySetting !== 'original') {
+      if (compressionMode !== 'original') {
         try {
-          const quality = qualitySetting === 'balanced' ? 0.8 : 0.5;
-          const maxDim = qualitySetting === 'compact' ? 1200 : null;
-          updateProgress(
-            Math.round(baseline + size * 0.6),
-            `Optimizing file size for page ${i + 1} (${qualitySetting} compression)...`,
-            `Enhancing image details for page ${i + 1}...`
-          );
-          
-          const compressed = await compressImage(compileUrl, quality, maxDim);
-          const arrayBuffer = await compressed.blob.arrayBuffer();
-          const imageBytes = new Uint8Array(arrayBuffer);
-          
-          pdfImage = await pdfDoc.embedJpg(imageBytes);
-          finalWidth = compressed.width;
-          finalHeight = compressed.height;
+          let compressed;
+          if (compressionMode === 'target-size') {
+            // Target overall PDF size of targetSizeMB
+            // Subtract structural overhead estimated at 25KB
+            const sizeLimit = targetSizeMB ? Number(targetSizeMB) : 0.5;
+            const totalTargetBytes = Math.max(10000, (sizeLimit * 1024 * 1024) - 25000);
+            const targetBytesPerImage = Math.max(5000, Math.round(totalTargetBytes / N));
+
+            updateProgress(
+              Math.round(baseline + size * 0.5),
+              `Compressing page ${i + 1} to hit target limit (${Math.round(targetBytesPerImage / 1024)} KB)...`,
+              `Optimizing image size to match your ${sizeLimit} MB target...`
+            );
+
+            compressed = await compressImageToTargetSize(compileUrl, targetBytesPerImage);
+          } else {
+            // Percentage-based compression (compressionPercent is between 10 and 100)
+            const pct = compressionPercent / 100;
+            const quality = Math.max(0.08, Math.min(0.95, pct));
+            const scale = Math.max(0.4, Math.min(1.0, 0.35 + 0.65 * pct));
+            const maxDim = scale < 1.0 ? Math.round(Math.max(600, 3000 * scale)) : null;
+
+            updateProgress(
+              Math.round(baseline + size * 0.5),
+              `Compressing page ${i + 1} with custom level of ${compressionPercent}%...`,
+              `Applying custom resolution compression to page ${i + 1}...`
+            );
+
+            compressed = await compressImage(compileUrl, quality, maxDim);
+          }
+
+          if (compressed) {
+            const arrayBuffer = await compressed.blob.arrayBuffer();
+            const imageBytes = new Uint8Array(arrayBuffer);
+
+            pdfImage = await pdfDoc.embedJpg(imageBytes);
+            finalWidth = compressed.width;
+            finalHeight = compressed.height;
+          }
         } catch (compErr) {
           console.warn('Canvas compression failed, falling back to original quality:', compErr);
         }

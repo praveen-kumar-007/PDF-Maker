@@ -356,3 +356,203 @@
 .btn-show-password:hover {
   color: #fff;
 }
+
+/* Custom Compression Styles */
+.setting-label-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.target-size-controls, .percentage-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.input-with-addon {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.input-addon-field {
+  flex-grow: 1;
+  padding-right: 50px !important;
+}
+
+.input-addon-text {
+  position: absolute;
+  right: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  pointer-events: none;
+}
+
+.percentage-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.percentage-badge {
+  background: rgba(26, 115, 232, 0.08);
+  color: var(--color-primary);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(26, 115, 232, 0.15);
+}
+
+.slider-percentage-wrap {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.slider-percentage {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  outline: none;
+  cursor: pointer;
+  z-index: 2;
+  position: relative;
+}
+
+.slider-percentage::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(26, 115, 232, 0.4);
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+  z-index: 3;
+}
+
+.slider-percentage::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  background: #1557b0;
+}
+
+.slider-percentage-fill {
+  position: absolute;
+  left: 0;
+  height: 6px;
+  border-radius: 3px 0 0 3px;
+  background: linear-gradient(90deg, var(--color-primary) 0%, #10b981 100%);
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: 0 0 8px rgba(26, 115, 232, 0.2);
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+  margin-top: -2px;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+/* Telemetry & Analytics Dashboard */
+.telemetry-section {
+  background: linear-gradient(180deg, #fafafa 0%, #f4f6f8 100%);
+  border: 1px solid rgba(26, 115, 232, 0.12);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+}
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .telemetry-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.telemetry-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  text-align: center;
+  transition: var(--transition-smooth);
+}
+
+.telemetry-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.telemetry-card.highlight {
+  background: rgba(26, 115, 232, 0.03);
+  border-color: rgba(26, 115, 232, 0.2);
+}
+
+.telemetry-card.success {
+  background: rgba(16, 185, 129, 0.03);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.telemetry-lbl {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 4px;
+}
+
+.telemetry-val {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-text-main);
+  line-height: 1.2;
+}
+
+.telemetry-card.highlight .telemetry-val {
+  color: var(--color-primary);
+  text-shadow: 0 0 10px rgba(26, 115, 232, 0.1);
+}
+
+.telemetry-card.success .telemetry-val {
+  color: #10b981;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+}
+
+.telemetry-sub {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+  font-weight: 500;
+}
