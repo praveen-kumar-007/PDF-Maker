@@ -1,0 +1,240 @@
+@import '../styles/variables.css';
+
+.left-panel-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dropzone {
+  background: rgba(13, 14, 21, 0.4);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.dropzone:hover, .dropzone.dragging {
+  border-color: var(--color-primary);
+  background: rgba(139, 92, 246, 0.05);
+  box-shadow: 0 0 25px var(--color-primary-glow);
+}
+
+.dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.dropzone-icon-ring {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+  margin-bottom: 8px;
+}
+
+.dropzone:hover .dropzone-icon-ring {
+  transform: translateY(-4px);
+  background: var(--color-primary-glow);
+  border-color: var(--color-primary-light);
+}
+
+.dropzone-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-text-muted);
+  transition: var(--transition-smooth);
+}
+
+.dropzone:hover .dropzone-icon {
+  color: var(--color-primary-light);
+}
+
+.dropzone h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #fff;
+}
+
+.dropzone p {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  max-width: 280px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.btn-upload {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  font-family: var(--font-family);
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  margin-top: 8px;
+}
+
+.dropzone:hover .btn-upload {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 15px var(--color-primary-glow);
+}
+
+/* Info Card */
+.info-card {
+  background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+
+.info-icon {
+  color: var(--color-primary-light);
+  width: 20px;
+  height: 20px;
+}
+
+.info-header h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.info-text {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.info-bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bullet-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-text-main);
+  line-height: 1.4;
+}
+
+.bullet-icon {
+  color: #10b981;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Dropzone and Info Card responsive improvements */
+@media (max-width: 1024px) {
+  .left-panel-wrapper.has-images .info-card {
+    display: none; /* Hide standard info card once images are uploaded to prioritize screen space */
+  }
+
+  .dropzone.has-images {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .dropzone.has-images .dropzone-content {
+    flex-direction: row;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    text-align: left;
+  }
+
+  .dropzone.has-images .dropzone-icon-ring {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 0;
+  }
+
+  .dropzone.has-images .dropzone-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .dropzone.has-images h3 {
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .dropzone.has-images p {
+    display: none; /* Hide description text on smaller screens when active queue is working */
+  }
+
+  .dropzone.has-images .btn-upload {
+    margin-top: 0;
+    font-size: 12px;
+    padding: 6px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dropzone {
+    padding: 24px 16px;
+  }
+  
+  .dropzone h3 {
+    font-size: 16px;
+  }
+  
+  .dropzone p {
+    font-size: 12px;
+  }
+  
+  .dropzone.has-images .dropzone-content {
+    gap: 10px;
+  }
+  
+  .dropzone.has-images h3 {
+    font-size: 13px;
+  }
+  
+  .dropzone.has-images .dropzone-icon-ring {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .dropzone.has-images .btn-upload {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}

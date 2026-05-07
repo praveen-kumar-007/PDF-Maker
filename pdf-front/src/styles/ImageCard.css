@@ -1,0 +1,263 @@
+@import '../styles/variables.css';
+
+.image-card {
+  background: rgba(10, 11, 16, 0.5);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: var(--transition-smooth);
+}
+
+.image-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-border-active);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+
+.card-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary-light);
+  z-index: 10;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.card-image-wrap {
+  width: 100%;
+  padding-top: 100%; /* 1:1 Aspect Ratio Box */
+  position: relative;
+  background-color: #050608;
+  overflow: hidden;
+}
+
+.card-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: var(--transition-smooth);
+}
+
+.image-card:hover .card-image {
+  transform: scale(1.05);
+}
+
+.card-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  opacity: 0;
+  transition: var(--transition-smooth);
+  z-index: 5;
+}
+
+.image-card:hover .card-image-overlay {
+  opacity: 1;
+}
+
+.overlay-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  min-width: 65px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.overlay-btn:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: scale(1.08);
+}
+
+.overlay-btn.preview:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.card-meta {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-grow: 1;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.card-filename {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-dims-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.dim-badge {
+  color: var(--color-text-muted);
+}
+
+.size-badge {
+  background: rgba(255,255,255,0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--color-text-main);
+}
+
+.crop-applied-tag {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.btn-undo-crop {
+  background: transparent;
+  border: none;
+  color: #10b981;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.btn-undo-crop:hover {
+  color: #34d399;
+}
+
+/* Card reorder controls */
+.card-footer-controls {
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0,0,0,0.25);
+}
+
+.reorder-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.reorder-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.reorder-btn:hover:not(:disabled) {
+  background: var(--color-primary-glow);
+  color: var(--color-primary-light);
+  border-color: var(--color-primary-light);
+}
+
+.reorder-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.btn-card-delete {
+  background: transparent;
+  border: none;
+  color: rgba(239, 68, 68, 0.6);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.btn-card-delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Touch & Mobile optimization for overlay action buttons */
+@media (max-width: 1024px) {
+  .card-image-overlay {
+    opacity: 1;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+    backdrop-filter: none;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .overlay-btn {
+    padding: 6px 12px;
+    min-width: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    background: rgba(5, 6, 8, 0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+  }
+  
+  .overlay-btn span {
+    font-weight: 600;
+  }
+
+  .image-card:hover .card-image {
+    transform: none; /* Disable zoom-on-hover scale on mobile for better scrolling performance */
+  }
+}
