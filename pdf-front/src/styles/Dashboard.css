@@ -261,3 +261,141 @@
   animation: pulse-slow 3s infinite ease-in-out;
 }
 
+/* =========================================
+   Premium Glassmorphic Error Bar / Banner
+   ========================================= */
+
+.premium-error-bar {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  width: 600px;
+  max-width: 92%;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-left: 6px solid #ef4444; /* Bold red brand indicator */
+  border-radius: 12px;
+  box-shadow: 
+    0 10px 30px rgba(15, 23, 42, 0.12),
+    0 1px 3px rgba(15, 23, 42, 0.04);
+  padding: 16px 20px;
+  box-sizing: border-box;
+  animation: slide-down-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s ease;
+}
+
+@keyframes slide-down-fade {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.error-bar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.error-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+
+.error-bar-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
+  flex-shrink: 0;
+}
+
+.error-bar-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.error-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.01em;
+}
+
+.error-message {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.error-link {
+  color: #1a73e8;
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 1.5px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.error-link:hover {
+  color: #1557b0;
+  border-bottom-color: #1557b0;
+}
+
+.error-close-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.error-close-btn:hover {
+  background: rgba(15, 23, 42, 0.05);
+  color: #64748b;
+  transform: scale(1.05);
+}
+
+@media (max-width: 640px) {
+  .premium-error-bar {
+    top: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+  }
+  
+  .error-bar-logo {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .error-title {
+    font-size: 13px;
+  }
+  
+  .error-message {
+    font-size: 11.5px;
+  }
+}
+

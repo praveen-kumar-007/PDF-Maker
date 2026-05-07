@@ -23,6 +23,15 @@ export default function Dashboard() {
   const [compileStep, setCompileStep] = useState('');
   const [compileSuccess, setCompileSuccess] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Auto-dismiss error banner after 8 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
   
   // Custom states for premium compilation progress
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -328,8 +337,7 @@ export default function Dashboard() {
         }
       }
     } catch (err) {
-      console.error(err);
-      alert('Error importing file: ' + err.message);
+      setError('Some error occurred during file import.');
     } finally {
       setIsCompiling(false);
       setCompileStep('');
@@ -492,8 +500,7 @@ export default function Dashboard() {
 
       setActiveCropId(null);
     } catch (err) {
-      console.error(err);
-      alert('Error during crop application: ' + err.message);
+      setError('Some error occurred during crop application.');
     } finally {
       setIsCompiling(false);
       setCompileStep('');
@@ -608,8 +615,7 @@ export default function Dashboard() {
       
       setTimeout(() => setCompileSuccess(false), 5000);
     } catch (err) {
-      console.error(err);
-      alert('Error compiling PDF: ' + err.message);
+      setError('Some error occurred during PDF compilation.');
       setIsGeneratingPDF(false);
     }
   };
@@ -622,12 +628,37 @@ export default function Dashboard() {
       {/* Dynamic Header */}
       <Header />
 
+      {/* Premium Glassmorphic Error Bar */}
+      {error && (
+        <div className="premium-error-bar">
+          <div className="error-bar-content">
+            <div className="error-bar-left">
+              <img src="/image.png" alt="Indocreonix Logo" className="error-bar-logo" />
+              <div className="error-bar-text-group">
+                <span className="error-title">System Notification</span>
+                <p className="error-message">
+                  {error} Please contact Indocreonix at{' '}
+                  <a href="mailto:support@indocreonix.com" className="error-link">
+                    support@indocreonix.com
+                  </a>{' '}
+                  for assistance.
+                </p>
+              </div>
+            </div>
+            <button className="error-close-btn" onClick={() => setError(null)} aria-label="Close message">
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main Dashboard Layout */}
       <main className="dashboard">
         <div className="left-panel">
           <Dropzone 
             onImagesSelected={handleImagesSelected} 
             hasImages={images.length > 0} 
+            onError={(msg) => setError(msg)}
           />
         </div>
 

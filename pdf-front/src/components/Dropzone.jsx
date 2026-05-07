@@ -8,7 +8,7 @@ const isMobileDevice = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 };
 
-export default function Dropzone({ onImagesSelected, hasImages }) {
+export default function Dropzone({ onImagesSelected, hasImages, onError }) {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const fileInputRef = useRef(null);
   const folderInputRef = useRef(null);
@@ -44,7 +44,9 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
     const validFiles = files.filter(file => file.type.startsWith('image/'));
     
     if (validFiles.length === 0) {
-      alert('Please upload valid image files.');
+      if (onError) {
+        onError('Some error occurred: Please select valid image files.');
+      }
       return;
     }
     onImagesSelected(validFiles);
