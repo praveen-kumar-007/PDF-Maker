@@ -89,6 +89,7 @@ export default function Dashboard() {
   const [addPageNumbers, setAddPageNumbers] = useState(() => localStorage.getItem('indocreonix_addPageNumbers') === 'true');
   const [pageNumberPosition, setPageNumberPosition] = useState(() => localStorage.getItem('indocreonix_pageNumberPosition') || 'center');
   const [pdfFilename, setPdfFilename] = useState(() => localStorage.getItem('indocreonix_pdfFilename') || 'Indocreonix_Compiled');
+  const [pendingFilterPrompt, setPendingFilterPrompt] = useState(null);
 
   // Restore session from Local Storage and IndexedDB on mount
   useEffect(() => {
@@ -548,12 +549,44 @@ export default function Dashboard() {
   };
 
   const handleApplyFilter = (id, filterType) => {
+    if (images.length <= 1) {
+      setImages(prev => prev.map(img => {
+        if (img.id === id) {
+          return { ...img, filter: filterType };
+        }
+        return img;
+      }));
+    } else {
+      setPendingFilterPrompt({ id, filter: filterType });
+    }
+  };
+
+  const handleConfirmApplyAll = () => {
+    if (!pendingFilterPrompt) return;
+    const { filter } = pendingFilterPrompt;
+    setImages(prev => prev.map(img => ({ ...img, filter: filter })));
+    setPendingFilterPrompt(null);
+  };
+
+  const handleConfirmApplySingle = () => {
+    if (!pendingFilterPrompt) return;
+    const { id, filter } = pendingFilterPrompt;
     setImages(prev => prev.map(img => {
       if (img.id === id) {
-        return { ...img, filter: filterType };
+        return { ...img, filter: filter };
       }
       return img;
     }));
+    setPendingFilterPrompt(null);
+  };
+
+  const getFilterLabel = (filterType) => {
+    switch (filterType) {
+      case 'doc': return 'Doc Scan';
+      case 'enhance': return 'Vivid Ink';
+      case 'grayscale': return 'Mono';
+      default: return 'Original';
+    }
   };
 
   // Queue reset
@@ -668,7 +701,37 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
+      {pendingFilterPrompt && (
+        <div className="filter-apply-bar-wrapper animate-slide-down">
+          <div className="filter-apply-bar">
+            <div className="apply-bar-left">
+              <img src="/image.png" alt="Indocreonix Logo" className="apply-bar-logo" />
+              <div className="apply-bar-text-group">
+                <span className="apply-bar-title">Batch Apply Enhancement</span>
+                <p className="apply-bar-desc">
+                  Would you like to apply the <strong>{getFilterLabel(pendingFilterPrompt.filter)}</strong> filter to all pages in your compiled queue?
+                </p>
+              </div>
+            </div>
+            <div className="apply-bar-actions">
+              <button 
+                type="button" 
+                className="btn-apply-bar yes" 
+                onClick={handleConfirmApplyAll}
+              >
+                Yes, Apply to All
+              </button>
+              <button 
+                type="button" 
+                className="btn-apply-bar no" 
+                onClick={handleConfirmApplySingle}
+              >
+                No, This Page Only
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Main Dashboard Layout */}
       <main className="dashboard">
         <div className="left-panel">
