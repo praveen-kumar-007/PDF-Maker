@@ -207,3 +207,46 @@ export const rotateImageAtResolution = (srcUrl, rotationAngle) => {
     imgObj.onerror = reject;
   });
 };
+
+/**
+ * Applies native hardware-accelerated filters to an image using offscreen canvas.
+ * @param {string} srcUrl
+ * @param {string} filterType - 'original', 'doc', 'enhance', or 'grayscale'
+ * @returns {Promise<Blob>}
+ */
+export const applyScannerFilterToImage = (srcUrl, filterType) => {
+  return new Promise((resolve, reject) => {
+    if (!filterType || filterType === 'original') {
+      fetch(srcUrl).then(res => res.blob()).then(resolve).catch(reject);
+      return;
+    }
+
+    const imgObj = new Image();
+    imgObj.src = srcUrl;
+    imgObj.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = imgObj.naturalWidth;
+      canvas.height = imgObj.naturalHeight;
+      const ctx = canvas.getContext('2d');
+
+      // Map filter key to Canvas API Filter string
+      let filterString = 'none';
+      if (filterType === 'doc') {
+        filterString = 'contrast(1.45) brightness(1.1) grayscale(1)';
+      } else if (filterType === 'enhance') {
+        filterString = 'contrast(1.25) saturate(1.3) brightness(1.05)';
+      } else if (filterType === 'grayscale') {
+        filterString = 'grayscale(1)';
+      }
+
+      ctx.filter = filterString;
+      ctx.drawImage(imgObj, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (!blob) return reject(new Error('Failed to apply filter to image'));
+        resolve(blob);
+      }, 'image/png');
+    };
+    imgObj.onerror = reject;
+  });
+};

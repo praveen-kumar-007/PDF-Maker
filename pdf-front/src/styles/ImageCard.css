@@ -54,54 +54,56 @@
   transform: scale(1.05);
 }
 
-.card-image-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.65);
-  backdrop-filter: blur(2px);
+/* Card Primary Actions Bar (Always Visible) */
+.card-primary-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+
+.btn-primary-action {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  opacity: 0;
-  transition: var(--transition-smooth);
-  z-index: 5;
-}
-
-.image-card:hover .card-image-overlay {
-  opacity: 1;
-}
-
-.overlay-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   gap: 6px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: #fff;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
   border-radius: 8px;
-  padding: 10px;
-  min-width: 65px;
-  font-size: 11px;
-  font-weight: 500;
-  font-family: var(--font-family);
   cursor: pointer;
-  transition: var(--transition-smooth);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--font-family);
+  border: 1px solid transparent;
 }
 
-.overlay-btn:hover {
+.btn-primary-action.crop {
+  background: rgba(26, 115, 232, 0.06);
+  border-color: rgba(26, 115, 232, 0.12);
+  color: var(--color-primary);
+}
+
+.btn-primary-action.crop:hover {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  transform: scale(1.08);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.15);
 }
 
-.overlay-btn.preview:hover {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
+.btn-primary-action.view {
+  background: rgba(217, 119, 6, 0.06);
+  border-color: rgba(217, 119, 6, 0.12);
+  color: #d97706; /* Warm premium gold */
+}
+
+.btn-primary-action.view:hover {
+  background: #d97706;
+  border-color: #d97706;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
 }
 
 .card-meta {
@@ -228,37 +230,24 @@
   color: #ef4444;
 }
 
-/* Touch & Mobile optimization for overlay action buttons */
+/* Touch & Mobile optimization for card images and actions */
 @media (max-width: 1024px) {
-  .card-image-overlay {
-    opacity: 1;
-    background: linear-gradient(to top, rgba(15,23,42,0.8) 0%, rgba(15,23,42,0.2) 50%, transparent 100%);
-    backdrop-filter: none;
-    align-items: flex-end;
-    justify-content: flex-end;
-    padding: 10px;
-    gap: 8px;
-  }
-
-  .overlay-btn {
-    padding: 6px 12px;
-    min-width: auto;
-    flex-direction: row;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 6px;
-  }
-  
-  .overlay-btn span {
-    font-weight: 600;
-  }
-
   .image-card:hover .card-image {
     transform: none; /* Disable zoom-on-hover scale on mobile for better scrolling performance */
+  }
+}
+
+@media (max-width: 768px) {
+  .card-primary-actions {
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .btn-primary-action {
+    padding: 6px 10px;
+    font-size: 11px;
+    gap: 4px;
+    border-radius: 6px;
   }
 }
 
@@ -315,4 +304,58 @@
   font-weight: 700;
   margin-left: 8px;
   letter-spacing: 0.03em;
+}
+
+/* Scanner Filters Section */
+.scanner-filters-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  border-top: 1px dashed rgba(15, 23, 42, 0.08);
+  padding-top: 10px;
+}
+
+.filters-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: left;
+}
+
+.filter-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.04);
+}
+
+.filter-opt-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 9.5px;
+  font-weight: 700;
+  font-family: var(--font-family);
+  padding: 6px 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+.filter-opt-btn:hover {
+  color: var(--color-text-main);
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.filter-opt-btn.active {
+  background: #ffffff;
+  color: var(--color-primary);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
 }

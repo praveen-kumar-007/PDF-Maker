@@ -51,8 +51,12 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
       >
-        {/* Hidden File Input */}
+        {/* Hidden File Input & Label */}
+        <label htmlFor="file-import-input" style={{ display: 'none' }}>Import files</label>
         <input 
+          id="file-import-input"
+          name="file-import-input"
+          aria-label="Import files"
           type="file" 
           ref={fileInputRef} 
           multiple 
@@ -61,8 +65,12 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
           style={{ display: 'none' }} 
         />
         
-        {/* Hidden Folder Input */}
+        {/* Hidden Folder Input & Label */}
+        <label htmlFor="folder-import-input" style={{ display: 'none' }}>Import folder</label>
         <input 
+          id="folder-import-input"
+          name="folder-import-input"
+          aria-label="Import folder"
           type="file" 
           ref={folderInputRef} 
           webkitdirectory=""
@@ -112,21 +120,21 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
           <h4>High-Fidelity Engine Instructions</h4>
         </div>
         <p className="info-text">
-          By default, Indocreonix embeds images directly in their **original pixel resolution**. 
+          By default, Indocreonix embeds images directly in their <strong>original pixel resolution</strong>. 
           This means a 50MP photo will have full 50MP depth inside the compiled PDF.
         </p>
         <div className="info-bullets">
           <div className="bullet-item">
             <Check className="bullet-icon" />
-            <span>**Zero Re-Compression**: We insert JPG/PNG binaries raw.</span>
+            <span><strong>Zero Re-Compression</strong>: We insert JPG/PNG binaries raw.</span>
           </div>
           <div className="bullet-item">
             <Check className="bullet-icon" />
-            <span>**Lossless Crops**: Crop canvas exports at full target resolution.</span>
+            <span><strong>Lossless Crops</strong>: Crop canvas exports at full target resolution.</span>
           </div>
           <div className="bullet-item">
             <Check className="bullet-icon" />
-            <span>**No Limits**: Upload thousands of pages without system throttle.</span>
+            <span><strong>No Limits</strong>: Upload thousands of pages without system throttle.</span>
           </div>
         </div>
       </div>

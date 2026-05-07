@@ -24,6 +24,13 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    align-items: stretch;
+  }
+
+  .left-panel,
+  .right-panel {
+    width: 100% !important;
+    box-sizing: border-box;
   }
 }
 
@@ -81,3 +88,175 @@
     box-sizing: border-box;
   }
 }
+
+/* =========================================
+   Premium Compilation Progress Overlay
+   ========================================= */
+
+.compiling-overlay {
+  z-index: 9999 !important; /* Ensure it's on top of everything */
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(16px) !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+.compiling-progress-card {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 24px 60px rgba(15, 23, 42, 0.2),
+    0 0 100px rgba(26, 115, 232, 0.12);
+  border-radius: 24px;
+  width: 480px;
+  max-width: 90%;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box;
+  animation: modal-zoom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.brand-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 28px;
+  gap: 8px;
+}
+
+.brand-logo-img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(26, 115, 232, 0.15);
+  margin-bottom: 8px;
+}
+
+.brand-header h2 {
+  font-family: var(--font-family);
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #1a73e8 0%, #34a853 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-subtext {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: visible; /* so glow is visible */
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1a73e8 0%, #34a853 50%, #fbbc05 100%);
+  border-radius: 999px;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 2;
+}
+
+.progress-glow {
+  height: 100%;
+  background: linear-gradient(90deg, #1a73e8 0%, #34a853 50%, #fbbc05 100%);
+  border-radius: 999px;
+  filter: blur(8px);
+  opacity: 0.5;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-stats {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.percentage-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.time-remaining-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.friendly-step-text {
+  font-size: 15px;
+  font-weight: 500;
+  color: #334155;
+  margin: 0 0 32px 0;
+  line-height: 1.5;
+  min-height: 45px; /* prevent layout shift between steps */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compiling-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  border-top: 1px solid #e2e8f0;
+  width: 100%;
+  padding-top: 20px;
+  justify-content: center;
+}
+
+.compiling-footer .lock-icon {
+  font-size: 14px;
+}
+
+/* Pulse animation for logo */
+@keyframes pulse-slow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 10px 25px rgba(26, 115, 232, 0.15);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 15px 35px rgba(26, 115, 232, 0.3);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s infinite ease-in-out;
+}
+

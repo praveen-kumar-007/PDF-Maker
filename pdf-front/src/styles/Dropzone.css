@@ -132,17 +132,18 @@
   opacity: 0.95;
 }
 
-/* Info Card */
+/* Info Card Callout */
 .info-card {
-  background: var(--bg-card);
+  background: linear-gradient(135deg, #ffffff, rgba(26, 115, 232, 0.015));
   backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 20px;
+  border: 1px solid rgba(26, 115, 232, 0.1);
+  border-left: 4px solid var(--color-primary); /* Beautiful primary highlight left border */
+  border-radius: 12px;
+  padding: 24px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.02);
 }
 
@@ -150,11 +151,11 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--color-text-main);
+  color: var(--color-primary); /* Bold brand color for heading */
 }
 
 .info-icon {
-  color: var(--color-primary-light);
+  color: var(--color-primary);
   width: 20px;
   height: 20px;
 }
@@ -162,34 +163,44 @@
 .info-header h4 {
   margin: 0;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .info-text {
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--color-text-muted);
   line-height: 1.6;
+  text-align: left !important; /* Force explicit left-alignment for professional layout */
+  margin: 0;
 }
 
 .info-bullets {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  margin-top: 4px;
 }
 
 .bullet-item {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  font-size: 12px;
+  gap: 10px;
+  font-size: 13px;
   color: var(--color-text-main);
-  line-height: 1.4;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.bullet-item strong {
+  font-weight: 600;
+  color: var(--color-text-main);
 }
 
 .bullet-icon {
   color: #10b981;
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   flex-shrink: 0;
   margin-top: 2px;
 }

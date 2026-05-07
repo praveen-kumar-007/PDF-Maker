@@ -13,7 +13,8 @@ export default function ImageCard({
   onMoveDown, 
   onUndoCrop,
   onRotate,
-  onDuplicate
+  onDuplicate,
+  onApplyFilter
 }) {
   return (
     <div className="image-card">
@@ -26,38 +27,28 @@ export default function ImageCard({
         )}
       </div>
       
-      <div className="card-image-wrap">
+      <div 
+        className="card-image-wrap"
+        onClick={() => onPreviewStart(img.id)}
+        style={{ cursor: 'zoom-in' }}
+        title="Click to view full resolution preview"
+      >
         <img 
           src={img.croppedUrl || img.previewUrl} 
           alt={img.name} 
           className="card-image"
           style={{ 
             transform: `rotate(${img.rotation || 0}deg)`,
-            transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            filter: img.filter === 'doc' 
+              ? 'contrast(1.45) brightness(1.1) grayscale(1)' 
+              : img.filter === 'enhance'
+                ? 'contrast(1.25) saturate(1.35) brightness(1.05)'
+                : img.filter === 'grayscale'
+                  ? 'grayscale(1)'
+                  : 'none'
           }}
         />
-        
-        {/* Hover overlay actions */}
-        <div className="card-image-overlay">
-          <button 
-            type="button" 
-            className="overlay-btn crop" 
-            title="Lossless Crop Editor"
-            onClick={() => onCropStart(img)}
-          >
-            <Crop size={16} />
-            <span>Crop</span>
-          </button>
-          <button 
-            type="button" 
-            className="overlay-btn preview" 
-            title="View Full Resolution"
-            onClick={() => onPreviewStart(img.id)}
-          >
-            <Eye size={16} />
-            <span>View</span>
-          </button>
-        </div>
       </div>
 
       <div className="card-meta">
@@ -66,17 +57,89 @@ export default function ImageCard({
           <span className="dim-badge">{img.width} × {img.height} px</span>
           <span className="size-badge">{formatBytes(img.size)}</span>
         </div>
+
+        {/* Permanently visible premium actions */}
+        <div className="card-primary-actions">
+          <button 
+            type="button" 
+            className="btn-primary-action crop" 
+            title="Lossless Crop Editor"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCropStart(img);
+            }}
+          >
+            <Crop size={14} />
+            <span>Crop</span>
+          </button>
+          <button 
+            type="button" 
+            className="btn-primary-action view" 
+            title="View Full Resolution"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreviewStart(img.id);
+            }}
+          >
+            <Eye size={14} />
+            <span>View</span>
+          </button>
+        </div>
+
         {img.croppedUrl && (
           <div className="crop-applied-tag">
             <span>Lossless Crop Applied</span>
             <button 
               type="button" 
               className="btn-undo-crop"
-              onClick={() => onUndoCrop(img.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onUndoCrop(img.id);
+              }}
               title="Undo Crop to Original"
             >
               Reset
             </button>
+          </div>
+        )}
+
+        {!img.isPdfPage && (
+          <div className="scanner-filters-section" onClick={(e) => e.stopPropagation()}>
+            <span className="filters-label">Scanner Enhancements</span>
+            <div className="filter-options">
+              <button
+                type="button"
+                className={`filter-opt-btn ${(!img.filter || img.filter === 'original') ? 'active' : ''}`}
+                onClick={() => onApplyFilter(img.id, 'original')}
+                title="Keep original photograph quality"
+              >
+                Original
+              </button>
+              <button
+                type="button"
+                className={`filter-opt-btn ${img.filter === 'doc' ? 'active' : ''}`}
+                onClick={() => onApplyFilter(img.id, 'doc')}
+                title="Doc Scan: Convert photograph to high-contrast photocopy"
+              >
+                Doc Scan
+              </button>
+              <button
+                type="button"
+                className={`filter-opt-btn ${img.filter === 'enhance' ? 'active' : ''}`}
+                onClick={() => onApplyFilter(img.id, 'enhance')}
+                title="Vivid Ink: Boost contrast and text saturation"
+              >
+                Vivid Ink
+              </button>
+              <button
+                type="button"
+                className={`filter-opt-btn ${img.filter === 'grayscale' ? 'active' : ''}`}
+                onClick={() => onApplyFilter(img.id, 'grayscale')}
+                title="Mono: Convert photograph to professional black & white"
+              >
+                Mono
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -47,7 +47,7 @@ export default function CompilerSettings({
           </h4>
           <div className="settings-grid-sub">
             <div className="setting-col">
-              <label className="setting-label">PDF Page Layout</label>
+              <span className="setting-label">PDF Page Layout</span>
               <div className="toggle-group-three">
                 <button 
                   type="button" 
@@ -79,7 +79,7 @@ export default function CompilerSettings({
             </div>
 
             <div className="setting-col">
-              <label className={`setting-label ${pageSizeSetting === 'original' ? 'disabled' : ''}`}>Page Margins</label>
+              <span className={`setting-label ${pageSizeSetting === 'original' ? 'disabled' : ''}`}>Page Margins</span>
               <div className="toggle-group-three">
                 <button 
                   type="button" 
@@ -124,7 +124,7 @@ export default function CompilerSettings({
             <span>Optimization &amp; Compression</span>
           </h4>
           <div className="setting-col">
-            <label className="setting-label">Image Compression Mode</label>
+            <span className="setting-label">Image Compression Mode</span>
             <div className="toggle-group-three">
               <button 
                 type="button" 
@@ -169,8 +169,10 @@ export default function CompilerSettings({
           <div className="settings-grid-sub">
             {/* Watermark controls */}
             <div className="setting-col">
-              <label className="setting-label">Diagonal Watermark Text</label>
+              <label htmlFor="watermarkText" className="setting-label">Diagonal Watermark Text</label>
               <input 
+                id="watermarkText"
+                name="watermarkText"
                 type="text" 
                 className="text-input-premium"
                 placeholder="e.g. CONFIDENTIAL"
@@ -180,8 +182,10 @@ export default function CompilerSettings({
               {watermarkText.trim() !== '' && (
                 <div className="watermark-subcontrols animate-fade-in">
                   <div className="subcontrol-row">
-                    <span className="subcontrol-lbl">Size ({watermarkSize}px)</span>
+                    <label htmlFor="watermarkSize" className="subcontrol-lbl">Size ({watermarkSize}px)</label>
                     <input 
+                      id="watermarkSize"
+                      name="watermarkSize"
                       type="range" 
                       min="14" 
                       max="100" 
@@ -191,8 +195,10 @@ export default function CompilerSettings({
                     />
                   </div>
                   <div className="subcontrol-row">
-                    <span className="subcontrol-lbl">Opacity ({Math.round(watermarkOpacity * 100)}%)</span>
+                    <label htmlFor="watermarkOpacity" className="subcontrol-lbl">Opacity ({Math.round(watermarkOpacity * 100)}%)</label>
                     <input 
+                      id="watermarkOpacity"
+                      name="watermarkOpacity"
                       type="range" 
                       min="0.05" 
                       max="0.80" 
@@ -203,9 +209,11 @@ export default function CompilerSettings({
                     />
                   </div>
                   <div className="subcontrol-row">
-                    <span className="subcontrol-lbl">Text Color</span>
+                    <label htmlFor="watermarkColor" className="subcontrol-lbl">Text Color</label>
                     <div className="color-picker-wrap">
                       <input 
+                        id="watermarkColor"
+                        name="watermarkColor"
                         type="color" 
                         value={watermarkColor} 
                         onChange={(e) => setWatermarkColor(e.target.value)}
@@ -220,7 +228,7 @@ export default function CompilerSettings({
 
             {/* Page number controls */}
             <div className="setting-col">
-              <label className="setting-label">Automatic Page Numbers</label>
+              <span className="setting-label">Automatic Page Numbers</span>
               <div className="toggle-group">
                 <button 
                   type="button" 
@@ -285,9 +293,11 @@ export default function CompilerSettings({
             <span>Output File Specifications</span>
           </h4>
           <div className="setting-col">
-            <label className="setting-label">Compiled PDF Filename</label>
+            <label htmlFor="pdfFilename" className="setting-label">Compiled PDF Filename</label>
             <div className="filename-input-wrap">
               <input 
+                id="pdfFilename"
+                name="pdfFilename"
                 type="text" 
                 className="text-input-premium"
                 placeholder="e.g. AeroPDF_Compiled"

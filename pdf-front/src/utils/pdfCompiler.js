@@ -1,5 +1,5 @@
 import { PDFDocument, degrees, rgb, StandardFonts } from 'pdf-lib';
-import { convertImageToCompatibleBytes, compressImage, rotateImageAtResolution } from './imageHelpers';
+import { convertImageToCompatibleBytes, compressImage, rotateImageAtResolution, applyScannerFilterToImage } from './imageHelpers';
 
 /**
  * Advanced, premium client-side PDF document builder
@@ -18,7 +18,7 @@ import { convertImageToCompatibleBytes, compressImage, rotateImageAtResolution }
  * @param {Function} setStep - state hook to display status
  * @returns {Promise<void>}
  */
-export const generateClientPDF = async (images, settings, setStep) => {
+export const generateClientPDF = async (images, settings, setStep, onProgress) => {
   const {
     pageSizeSetting = 'original',
     marginSetting = 'standard',
@@ -32,19 +32,35 @@ export const generateClientPDF = async (images, settings, setStep) => {
     pdfPassword = ''
   } = settings;
 
-  setStep('Initializing high-fidelity PDF canvas...');
+  const updateProgress = (pct, step, friendly) => {
+    if (typeof setStep === 'function') setStep(step);
+    if (typeof onProgress === 'function') onProgress(pct, friendly);
+  };
+
+  updateProgress(2, 'Initializing high-fidelity PDF canvas...', 'Preparing document templates...');
   const pdfDoc = await PDFDocument.create();
 
-  for (let i = 0; i < images.length; i++) {
+  const N = images.length;
+  for (let i = 0; i < N; i++) {
     const img = images[i];
-    setStep(`Processing Page ${i + 1} of ${images.length}: [${img.name}]...`);
-
+    const baseline = 5 + (i / N) * 80;
+    const size = 80 / N;
     const srcUrl = img.croppedUrl || img.previewUrl;
+
+    updateProgress(
+      Math.round(baseline),
+      `Processing Page ${i + 1} of ${N}: [${img.name}]...`,
+      `Adding page ${i + 1} of ${N} to your document...`
+    );
 
     if (img.isPdfPage) {
       // 1. Existing PDF page insertion
       try {
-        setStep(`Extracting page ${img.pageIndex + 1} from PDF [${img.name}]...`);
+        updateProgress(
+          Math.round(baseline + size * 0.4),
+          `Extracting page ${img.pageIndex + 1} from PDF [${img.name}]...`,
+          `Reading page ${img.pageIndex + 1} of your imported PDF...`
+        );
         const srcPdfDoc = await PDFDocument.load(img.pdfSource);
         
         if (pageSizeSetting === 'original') {
@@ -125,12 +141,33 @@ export const generateClientPDF = async (images, settings, setStep) => {
 
       let compileUrl = srcUrl;
       let createdRotatedUrl = null;
+      let filterAppliedUrl = null;
+
+      // Apply scanner filters (e.g. Doc Scan, Vivid, Mono) if configured
+      if (img.filter && img.filter !== 'original') {
+        try {
+          updateProgress(
+            Math.round(baseline + size * 0.15),
+            `Applying scanner filter "${img.filter}" to page ${i + 1}...`,
+            `Enhancing details for page ${i + 1}...`
+          );
+          const filterBlob = await applyScannerFilterToImage(compileUrl, img.filter);
+          filterAppliedUrl = URL.createObjectURL(filterBlob);
+          compileUrl = filterAppliedUrl;
+        } catch (filterErr) {
+          console.error('Failed to apply scanner filter during compilation:', filterErr);
+        }
+      }
 
       // Physically rotate image pixels if there is user rotation
       if (img.rotation && img.rotation % 360 !== 0) {
         try {
-          setStep(`Physically rotating page ${i + 1} (${img.rotation}°)...`);
-          const rotated = await rotateImageAtResolution(srcUrl, img.rotation);
+          updateProgress(
+            Math.round(baseline + size * 0.35),
+            `Physically rotating page ${i + 1} (${img.rotation}°)...`,
+            `Aligning and adjusting rotation for page ${i + 1}...`
+          );
+          const rotated = await rotateImageAtResolution(compileUrl, img.rotation);
           createdRotatedUrl = URL.createObjectURL(rotated.blob);
           compileUrl = createdRotatedUrl;
           finalWidth = rotated.width;
@@ -145,7 +182,11 @@ export const generateClientPDF = async (images, settings, setStep) => {
         try {
           const quality = qualitySetting === 'balanced' ? 0.8 : 0.5;
           const maxDim = qualitySetting === 'compact' ? 1200 : null;
-          setStep(`Optimizing file size for page ${i + 1} (${qualitySetting} compression)...`);
+          updateProgress(
+            Math.round(baseline + size * 0.6),
+            `Optimizing file size for page ${i + 1} (${qualitySetting} compression)...`,
+            `Enhancing image details for page ${i + 1}...`
+          );
           
           const compressed = await compressImage(compileUrl, quality, maxDim);
           const arrayBuffer = await compressed.blob.arrayBuffer();
@@ -161,8 +202,20 @@ export const generateClientPDF = async (images, settings, setStep) => {
 
       // If compression was original or failed, load original file bytes
       if (!pdfImage) {
-        const response = await fetch(compileUrl);
-        const arrayBuffer = await response.arrayBuffer();
+        let arrayBuffer;
+        const rawFile = img.croppedFile || img.file;
+        if (rawFile) {
+          try {
+            arrayBuffer = await rawFile.arrayBuffer();
+          } catch (arrayBufferErr) {
+            console.warn('Direct ArrayBuffer load failed, trying fetch fallback:', arrayBufferErr);
+            const response = await fetch(compileUrl);
+            arrayBuffer = await response.arrayBuffer();
+          }
+        } else {
+          const response = await fetch(compileUrl);
+          arrayBuffer = await response.arrayBuffer();
+        }
         const imageBytes = new Uint8Array(arrayBuffer);
 
         try {
@@ -172,7 +225,11 @@ export const generateClientPDF = async (images, settings, setStep) => {
             pdfImage = await pdfDoc.embedJpg(imageBytes);
           }
         } catch (embedError) {
-          setStep(`Standardizing raw bytes for [${img.name}]...`);
+          updateProgress(
+            Math.round(baseline + size * 0.8),
+            `Standardizing raw bytes for [${img.name}]...`,
+            `Optimizing image data for page ${i + 1}...`
+          );
           const fallbackBytes = await convertImageToCompatibleBytes(compileUrl, isPng);
           pdfImage = await pdfDoc.embedPng(fallbackBytes);
         }
@@ -232,9 +289,12 @@ export const generateClientPDF = async (images, settings, setStep) => {
         });
       }
 
-      // Revoke temporary rotated Blob URLs to prevent memory leakage
+      // Revoke temporary rotated or filtered Blob URLs to prevent memory leakage
       if (createdRotatedUrl) {
         URL.revokeObjectURL(createdRotatedUrl);
+      }
+      if (filterAppliedUrl) {
+        URL.revokeObjectURL(filterAppliedUrl);
       }
     }
   }
@@ -243,7 +303,7 @@ export const generateClientPDF = async (images, settings, setStep) => {
 
   // 3. Add Custom Diagonal Watermarks (if configured)
   if (watermarkText && watermarkText.trim() !== '') {
-    setStep('Injecting custom security watermarks...');
+    updateProgress(88, 'Injecting custom security watermarks...', 'Adding your custom watermark security layer...');
     const watermarkFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     
     // Parse color hex to rgb decimal
@@ -275,7 +335,7 @@ export const generateClientPDF = async (images, settings, setStep) => {
 
   // 4. Add Automatic Page Numbering (if configured)
   if (addPageNumbers) {
-    setStep('Stamping page indexing metadata...');
+    updateProgress(92, 'Stamping page indexing metadata...', 'Stamping page numbers neatly...');
     const numFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const totalPages = pages.length;
 
@@ -308,10 +368,10 @@ export const generateClientPDF = async (images, settings, setStep) => {
     }
   }
 
-  setStep('Optimizing document vector architecture...');
+  updateProgress(96, 'Optimizing document vector architecture...', 'Finalizing document structure and layout...');
   const pdfBytes = await pdfDoc.save();
 
-  setStep('Triggering secure system download...');
+  updateProgress(99, 'Triggering secure system download...', 'All done! Preparing your download now...');
   const blob = new Blob([pdfBytes], { type: 'application/pdf' });
   const downloadUrl = URL.createObjectURL(blob);
   const link = document.createElement('a');

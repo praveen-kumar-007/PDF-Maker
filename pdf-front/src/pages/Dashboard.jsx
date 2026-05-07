@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import Dropzone from '../components/Dropzone';
 import ImageGrid from '../components/ImageGrid';
@@ -23,6 +23,37 @@ export default function Dashboard() {
   const [compileStep, setCompileStep] = useState('');
   const [compileSuccess, setCompileSuccess] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
+  
+  // Custom states for premium compilation progress
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [compileProgress, setCompileProgress] = useState(0);
+  const [compileFriendlyStep, setCompileFriendlyStep] = useState('');
+  const compileStartTimeRef = useRef(null);
+
+  const calculateTimeRemaining = (progress, totalPages) => {
+    if (progress <= 5) {
+      const estSeconds = Math.max(2, Math.round(totalPages * 0.8));
+      return `Estimated: ~${estSeconds}s remaining`;
+    }
+    
+    if (progress >= 98) {
+      return "Finishing up details...";
+    }
+    
+    if (compileStartTimeRef.current) {
+      const elapsed = Date.now() - compileStartTimeRef.current;
+      const totalEstimated = (elapsed / progress) * 100;
+      const remaining = totalEstimated - elapsed;
+      const remainingSeconds = Math.round(remaining / 1000);
+      
+      if (remainingSeconds <= 1) {
+        return "Almost ready...";
+      }
+      return `Estimated: ~${remainingSeconds}s remaining`;
+    }
+    
+    return "Analyzing document...";
+  };
   
   // Compiler settings - load from LocalStorage
   const [pageSizeSetting, setPageSizeSetting] = useState(() => localStorage.getItem('indocreonix_pageSizeSetting') || 'original');
@@ -171,17 +202,23 @@ export default function Dashboard() {
     localStorage.setItem('indocreonix_images_meta', JSON.stringify(serializable));
   }, [images, isRestoringSession]);
 
-  // Clean up object URLs on unmount to prevent memory leaks
+  // Keep a ref to the latest images array so the unmount cleanup can read it without triggering on every change
+  const imagesRef = useRef(images);
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
+
+  // Clean up object URLs on unmount to prevent memory leaks and prevent active blob URL destruction
   useEffect(() => {
     return () => {
       const urlsToRevoke = new Set();
-      images.forEach(img => {
+      imagesRef.current.forEach(img => {
         if (img.previewUrl) urlsToRevoke.add(img.previewUrl);
         if (img.croppedUrl && img.croppedUrl.startsWith('blob:')) urlsToRevoke.add(img.croppedUrl);
       });
       urlsToRevoke.forEach(url => URL.revokeObjectURL(url));
     };
-  }, [images]);
+  }, []);
 
   // Handle adding new files (Images and PDFs)
   const handleImagesSelected = async (validFiles) => {
@@ -488,6 +525,15 @@ export default function Dashboard() {
     }));
   };
 
+  const handleApplyFilter = (id, filterType) => {
+    setImages(prev => prev.map(img => {
+      if (img.id === id) {
+        return { ...img, filter: filterType };
+      }
+      return img;
+    }));
+  };
+
   // Queue reset
   const handleResetQueue = async () => {
     // Completely wipe all files from IndexedDB database
@@ -524,8 +570,11 @@ export default function Dashboard() {
   const handleCompile = async () => {
     if (images.length === 0) return;
 
-    setIsCompiling(true);
+    setIsGeneratingPDF(true);
+    setCompileProgress(0);
+    setCompileFriendlyStep('Initializing document templates...');
     setCompileSuccess(false);
+    compileStartTimeRef.current = Date.now();
 
     try {
       const compilerSettings = {
@@ -541,15 +590,27 @@ export default function Dashboard() {
         pdfFilename
       };
 
-      await generateClientPDF(images, compilerSettings, setCompileStep);
+      const handleProgress = (progress, friendlyStep) => {
+        setCompileProgress(progress);
+        setCompileFriendlyStep(friendlyStep);
+      };
+
+      await generateClientPDF(images, compilerSettings, setCompileStep, handleProgress);
+      
+      setCompileProgress(100);
+      setCompileFriendlyStep('Your premium PDF is ready and download started!');
       setCompileSuccess(true);
+      
+      setTimeout(() => {
+        setIsGeneratingPDF(false);
+        handleResetQueue(); // Reset the page queue and all local temporary files
+      }, 1500); // Elegant wait so the progress bar completion feels satisfying
+      
       setTimeout(() => setCompileSuccess(false), 5000);
     } catch (err) {
       console.error(err);
       alert('Error compiling PDF: ' + err.message);
-    } finally {
-      setIsCompiling(false);
-      setCompileStep('');
+      setIsGeneratingPDF(false);
     }
   };
 
@@ -584,6 +645,7 @@ export default function Dashboard() {
             onDuplicate={handleDuplicatePage}
             onSort={handleSortQueue}
             onReverse={handleReverseQueue}
+            onApplyFilter={handleApplyFilter}
           />
 
           {images.length > 0 && (
@@ -608,8 +670,8 @@ export default function Dashboard() {
               setPageNumberPosition={setPageNumberPosition}
               pdfFilename={pdfFilename}
               setPdfFilename={setPdfFilename}
-              isCompiling={isCompiling}
-              compileStep={compileStep}
+              isCompiling={isCompiling || isGeneratingPDF}
+              compileStep={isGeneratingPDF ? 'Processing...' : compileStep}
               compileSuccess={compileSuccess}
               onCompile={handleCompile}
             />
@@ -634,6 +696,41 @@ export default function Dashboard() {
           imgName={activePreviewImage.name}
           onClose={() => setActivePreviewId(null)}
         />
+      )}
+
+      {/* Premium Compiling Progress Overlay */}
+      {isGeneratingPDF && (
+        <div className="compiling-overlay">
+          <div className="compiling-progress-card">
+            <div className="brand-header">
+              <img src="/image.png" alt="Indocreonix Logo" className="brand-logo-img animate-pulse-slow" />
+              <h2>Indocreonix</h2>
+              <p className="brand-subtext">Premium PDF Engine</p>
+            </div>
+            
+            <div className="progress-bar-container">
+              <div 
+                className="progress-bar-fill" 
+                style={{ width: `${compileProgress}%` }}
+              ></div>
+              <div className="progress-glow" style={{ width: `${compileProgress}%` }}></div>
+            </div>
+            
+            <div className="progress-stats">
+              <span className="percentage-text">{compileProgress}% Completed</span>
+              <span className="time-remaining-text">
+                {calculateTimeRemaining(compileProgress, images.length)}
+              </span>
+            </div>
+            
+            <p className="friendly-step-text">{compileFriendlyStep}</p>
+            
+            <div className="compiling-footer">
+              <span className="lock-icon">🔒</span>
+              <span>100% secure offline compilation</span>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

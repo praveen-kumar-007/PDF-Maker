@@ -14,7 +14,8 @@ export default function ImageGrid({
   onRotate,
   onDuplicate,
   onSort,
-  onReverse
+  onReverse,
+  onApplyFilter
 }) {
   if (images.length === 0) {
     return (
@@ -88,6 +89,7 @@ export default function ImageGrid({
             onUndoCrop={onUndoCrop}
             onRotate={onRotate}
             onDuplicate={onDuplicate}
+            onApplyFilter={onApplyFilter}
           />
         ))}
       </div>
