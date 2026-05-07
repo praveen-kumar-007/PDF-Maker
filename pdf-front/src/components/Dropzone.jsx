@@ -83,26 +83,31 @@ export default function Dropzone({ onImagesSelected, hasImages, onError }) {
           style={{ display: 'none' }} 
         />
         
-        {/* Hidden Folder Input & Label - Bypasses webkitdirectory on mobile to avoid broken SAF folder picker */}
-        <label htmlFor="folder-import-input" style={{ display: 'none' }}>Import folder</label>
-        <input 
-          id="folder-import-input"
-          name="folder-import-input"
-          aria-label="Import folder"
-          type="file" 
-          ref={folderInputRef} 
-          multiple 
-          {...(!isMobile ? { webkitdirectory: "", directory: "" } : { accept: "image/*" })}
-          onChange={handleFileSelect} 
-          style={{ display: 'none' }} 
-        />
+        {/* Hidden Folder Input & Label - Desktop-only strict directory selection */}
+        {!isMobile && (
+          <>
+            <label htmlFor="folder-import-input" style={{ display: 'none' }}>Import folder</label>
+            <input 
+              id="folder-import-input"
+              name="folder-import-input"
+              aria-label="Import folder"
+              type="file" 
+              ref={folderInputRef} 
+              webkitdirectory="true"
+              directory="true"
+              multiple 
+              onChange={handleFileSelect} 
+              style={{ display: 'none' }} 
+            />
+          </>
+        )}
 
         <div className="dropzone-content">
           <div className="dropzone-icon-ring">
             <Upload className="dropzone-icon" />
           </div>
           <h3>Import Pages or Folders</h3>
-          <p>Supports all types of images &amp; folders. Merge folders sorted by date modified.</p>
+          <p>{isMobile ? 'Supports uploading all image formats.' : 'Supports uploading folders or images.'}</p>
           
           <div className="dropzone-buttons">
             <button 
@@ -115,17 +120,19 @@ export default function Dropzone({ onImagesSelected, hasImages, onError }) {
             >
               {isMobile ? 'Select Images' : 'Select Files'}
             </button>
-            <button 
-              type="button" 
-              className="btn-upload btn-folder"
-              onClick={(e) => {
-                e.stopPropagation();
-                folderInputRef.current?.click();
-              }}
-            >
-              <FolderOpen size={13} style={{ marginRight: 6 }} />
-              {isMobile ? 'Select from Files' : 'Select Folder'}
-            </button>
+            {!isMobile && (
+              <button 
+                type="button" 
+                className="btn-upload btn-folder"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  folderInputRef.current?.click();
+                }}
+              >
+                <FolderOpen size={13} style={{ marginRight: 6 }} />
+                Select Folder
+              </button>
+            )}
           </div>
         </div>
       </div>
