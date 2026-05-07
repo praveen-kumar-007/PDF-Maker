@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react';
-import { Upload, Info, Check } from 'lucide-react';
+import { Upload, Info, Check, FolderOpen } from 'lucide-react';
 import '../styles/Dropzone.css';
 
 export default function Dropzone({ onImagesSelected, hasImages }) {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const fileInputRef = useRef(null);
+  const folderInputRef = useRef(null);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -25,16 +26,20 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     processFiles(files);
+    
+    // Reset inputs so the user can re-upload the same files/folders if needed
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (folderInputRef.current) folderInputRef.current.value = '';
   };
 
   const processFiles = (files) => {
-    const validImageFiles = files.filter(file => file.type.startsWith('image/'));
+    const validFiles = files.filter(file => file.type.startsWith('image/') || file.type === 'application/pdf');
     
-    if (validImageFiles.length === 0) {
-      alert('Please upload valid image files (JPEG, PNG, WebP, etc.).');
+    if (validFiles.length === 0) {
+      alert('Please upload valid image files (JPEG, PNG, WebP) or PDF documents.');
       return;
     }
-    onImagesSelected(validImageFiles);
+    onImagesSelected(validFiles);
   };
 
   return (
@@ -46,21 +51,57 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
       >
+        {/* Hidden File Input */}
         <input 
           type="file" 
           ref={fileInputRef} 
           multiple 
-          accept="image/*" 
+          accept="image/*, application/pdf" 
           onChange={handleFileSelect} 
           style={{ display: 'none' }} 
         />
+        
+        {/* Hidden Folder Input */}
+        <input 
+          type="file" 
+          ref={folderInputRef} 
+          webkitdirectory=""
+          directory=""
+          multiple 
+          onChange={handleFileSelect} 
+          style={{ display: 'none' }} 
+        />
+
         <div className="dropzone-content">
           <div className="dropzone-icon-ring">
             <Upload className="dropzone-icon" />
           </div>
-          <h3>Drag &amp; Drop Images</h3>
-          <p>Supports full resolution JPG, PNG, WebP &amp; more. No file size or page limit.</p>
-          <button type="button" className="btn-upload">Select Files</button>
+          <h3>Import Pages or Folders</h3>
+          <p>Supports full resolution JPG, PNG, WebP &amp; PDFs. Merge folders sorted by date modified.</p>
+          
+          <div className="dropzone-buttons">
+            <button 
+              type="button" 
+              className="btn-upload"
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+            >
+              Select Files
+            </button>
+            <button 
+              type="button" 
+              className="btn-upload btn-folder"
+              onClick={(e) => {
+                e.stopPropagation();
+                folderInputRef.current?.click();
+              }}
+            >
+              <FolderOpen size={13} style={{ marginRight: 6 }} />
+              Select Folder
+            </button>
+          </div>
         </div>
       </div>
 
@@ -71,7 +112,7 @@ export default function Dropzone({ onImagesSelected, hasImages }) {
           <h4>High-Fidelity Engine Instructions</h4>
         </div>
         <p className="info-text">
-          By default, AeroPDF embeds images directly in their **original pixel resolution**. 
+          By default, Indocreonix embeds images directly in their **original pixel resolution**. 
           This means a 50MP photo will have full 50MP depth inside the compiled PDF.
         </p>
         <div className="info-bullets">

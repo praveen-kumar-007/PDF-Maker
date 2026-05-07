@@ -7,8 +7,8 @@
 }
 
 .dropzone {
-  background: rgba(13, 14, 21, 0.4);
-  border: 2px dashed rgba(255, 255, 255, 0.15);
+  background: #ffffff;
+  border: 2px dashed var(--color-border);
   border-radius: 16px;
   padding: 40px 24px;
   text-align: center;
@@ -18,13 +18,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03), inset 0 2px 10px rgba(15, 23, 42, 0.01);
 }
 
 .dropzone:hover, .dropzone.dragging {
   border-color: var(--color-primary);
-  background: rgba(139, 92, 246, 0.05);
-  box-shadow: 0 0 25px var(--color-primary-glow);
+  background: rgba(26, 115, 232, 0.03);
+  box-shadow: 0 0 25px rgba(26, 115, 232, 0.1);
 }
 
 .dropzone-content {
@@ -38,7 +38,7 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 0, 0, 0.02);
   border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
@@ -90,13 +90,47 @@
   border-radius: 8px;
   cursor: pointer;
   transition: var(--transition-smooth);
-  margin-top: 8px;
 }
 
-.dropzone:hover .btn-upload {
+.btn-upload:hover {
   background: var(--color-primary);
   border-color: var(--color-primary);
   box-shadow: 0 4px 15px var(--color-primary-glow);
+  transform: translateY(-1px);
+}
+
+.dropzone-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-folder {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: var(--color-primary-light);
+}
+
+.btn-folder:hover {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #fff !important;
+}
+
+/* Remove direct hover styling of .btn-upload from .dropzone hover so they highlight independently */
+.dropzone:hover .btn-upload:not(:hover) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dropzone:hover .btn-folder:not(:hover) {
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(139, 92, 246, 0.4);
 }
 
 /* Info Card */
@@ -110,6 +144,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.02);
 }
 
 .info-header {
@@ -200,10 +235,11 @@
     display: none; /* Hide description text on smaller screens when active queue is working */
   }
 
-  .dropzone.has-images .btn-upload {
+  .dropzone.has-images .btn-upload,
+  .dropzone.has-images .btn-folder {
     margin-top: 0;
-    font-size: 12px;
-    padding: 6px 14px;
+    font-size: 11px;
+    padding: 6px 12px;
   }
 }
 
@@ -233,8 +269,9 @@
     height: 36px;
   }
   
-  .dropzone.has-images .btn-upload {
-    padding: 5px 10px;
-    font-size: 11px;
+  .dropzone.has-images .btn-upload,
+  .dropzone.has-images .btn-folder {
+    padding: 5px 8px;
+    font-size: 10px;
   }
 }

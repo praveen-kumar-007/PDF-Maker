@@ -1,4 +1,4 @@
-import { Trash2, Crop, ArrowUp, ArrowDown, Eye } from 'lucide-react';
+import { Trash2, Crop, ArrowUp, ArrowDown, Eye, RotateCw, Copy, FileCode2 } from 'lucide-react';
 import { formatBytes } from '../utils/imageHelpers';
 import '../styles/ImageCard.css';
 
@@ -11,17 +11,30 @@ export default function ImageCard({
   onRemove, 
   onMoveUp, 
   onMoveDown, 
-  onUndoCrop 
+  onUndoCrop,
+  onRotate,
+  onDuplicate
 }) {
   return (
     <div className="image-card">
-      <div className="card-badge">Page {index + 1}</div>
+      <div className="card-badge">
+        <span>Page {index + 1}</span>
+        {img.isPdfPage && (
+          <span className="pdf-source-badge" title="Imported PDF Page">
+            <FileCode2 size={10} style={{ marginRight: 2 }} /> PDF
+          </span>
+        )}
+      </div>
       
       <div className="card-image-wrap">
         <img 
           src={img.croppedUrl || img.previewUrl} 
           alt={img.name} 
           className="card-image"
+          style={{ 
+            transform: `rotate(${img.rotation || 0}deg)`,
+            transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}
         />
         
         {/* Hover overlay actions */}
@@ -89,14 +102,33 @@ export default function ImageCard({
             <ArrowDown size={15} />
           </button>
         </div>
-        <button 
-          type="button" 
-          className="btn-card-delete"
-          onClick={() => onRemove(img.id)}
-          title="Delete Page"
-        >
-          <Trash2 size={15} />
-        </button>
+
+        <div className="action-btns-group">
+          <button 
+            type="button" 
+            className="card-action-btn rotate" 
+            onClick={() => onRotate(img.id)}
+            title="Rotate Page 90° Clockwise"
+          >
+            <RotateCw size={13} />
+          </button>
+          <button 
+            type="button" 
+            className="card-action-btn duplicate" 
+            onClick={() => onDuplicate(img.id)}
+            title="Duplicate Page"
+          >
+            <Copy size={13} />
+          </button>
+          <button 
+            type="button" 
+            className="btn-card-delete"
+            onClick={() => onRemove(img.id)}
+            title="Delete Page"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
       </div>
     </div>
   );

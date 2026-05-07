@@ -99,3 +99,50 @@ export const cropImageAtResolution = (srcUrl, cropBox, fileType) => {
     imgObj.onerror = reject;
   });
 };
+
+/**
+ * Compresses and optionally resizes an image on the fly.
+ * @param {string} srcUrl - Blob URL or Data URL of the source image
+ * @param {number} quality - JPEG quality from 0.0 to 1.0
+ * @param {number|null} maxDimension - Max width or height (aspect ratio is preserved)
+ * @returns {Promise<{blob: Blob, width: number, height: number}>}
+ */
+export const compressImage = (srcUrl, quality = 0.8, maxDimension = null) => {
+  return new Promise((resolve, reject) => {
+    const imgObj = new Image();
+    imgObj.src = srcUrl;
+    imgObj.onload = () => {
+      let width = imgObj.naturalWidth;
+      let height = imgObj.naturalHeight;
+
+      if (maxDimension && (width > maxDimension || height > maxDimension)) {
+        const ratio = width / height;
+        if (width > height) {
+          width = maxDimension;
+          height = Math.round(width / ratio);
+        } else {
+          height = maxDimension;
+          width = Math.round(height * ratio);
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      // Draw and apply compression
+      ctx.drawImage(imgObj, 0, 0, width, height);
+
+      canvas.toBlob((blob) => {
+        if (!blob) return reject(new Error('Image compression failed'));
+        resolve({
+          blob: blob,
+          width: width,
+          height: height
+        });
+      }, 'image/jpeg', quality);
+    };
+    imgObj.onerror = (err) => reject(new Error('Failed to load image for compression: ' + err.message));
+  });
+};

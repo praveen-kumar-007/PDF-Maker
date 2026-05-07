@@ -1,24 +1,30 @@
 /* =========================================
-   AeroPDF Theme Tokens & Variables
+   Indocreonix Theme Tokens & Variables
    ========================================= */
 
 :root {
   --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --bg-app: #090a0f;
-  --bg-card: rgba(18, 19, 26, 0.75);
-  --bg-card-hover: rgba(28, 30, 41, 0.85);
-  --bg-input: rgba(10, 11, 16, 0.6);
-  --color-primary: #8b5cf6;
-  --color-primary-light: #a78bfa;
-  --color-primary-glow: rgba(139, 92, 246, 0.3);
-  --color-accent: #d946ef;
-  --color-accent-glow: rgba(217, 70, 239, 0.2);
-  --color-text-main: #e2e8f0;
-  --color-text-muted: #94a3b8;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-active: rgba(139, 92, 246, 0.5);
-  --glass-blur: blur(16px);
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --bg-app: #f4f6f9;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fcfdfe;
+  --bg-input: #f8fafc;
+  
+  /* Google Branding Color Codes */
+  --color-primary: #1a73e8; /* Google Blue */
+  --color-primary-light: #4285f4; /* Light Google Blue */
+  --color-primary-glow: rgba(26, 115, 232, 0.08);
+  
+  --color-accent: #ea4335; /* Google Red */
+  --color-accent-glow: rgba(234, 67, 53, 0.06);
+  
+  /* Highly visible Slate typography */
+  --color-text-main: #1e293b; /* Deep slate */
+  --color-text-muted: #57657a; /* Cool slate gray */
+  --color-border: rgba(0, 0, 0, 0.08); /* Clean thin border */
+  --color-border-active: rgba(26, 115, 232, 0.5);
+  
+  --glass-blur: blur(24px);
+  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Common Animations */

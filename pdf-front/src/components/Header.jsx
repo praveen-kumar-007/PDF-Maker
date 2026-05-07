@@ -1,16 +1,15 @@
-import { Sparkles } from 'lucide-react';
 import '../styles/Header.css';
 
 export default function Header() {
   return (
     <header className="main-header">
       <div className="header-logo">
-        <div className="logo-icon">
-          <Sparkles className="icon-sparkle animate-pulse" />
+        <div className="logo-icon logo-image-container">
+          <img src="/image.png" alt="Indocreonix Logo" className="logo-img-branding" />
         </div>
         <div className="logo-meta">
-          <h1>AeroPDF</h1>
-          <p>Lossless Multi-Page Image Compiler</p>
+          <h1>Indocreonix</h1>
+          <p>Premium Lossless PDF Maker</p>
         </div>
       </div>
       <div className="header-badge">

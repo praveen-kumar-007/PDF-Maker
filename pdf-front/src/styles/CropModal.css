@@ -10,7 +10,7 @@
 
 .crop-controls-toolbar {
   padding: 12px 24px;
-  background: rgba(0,0,0,0.25);
+  background: #f8fafc;
   border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
@@ -29,7 +29,7 @@
 }
 
 .preset-btn {
-  background: rgba(255,255,255,0.04);
+  background: #ffffff;
   border: 1px solid var(--color-border);
   color: var(--color-text-main);
   font-family: var(--font-family);
@@ -43,13 +43,13 @@
 
 .preset-btn:hover, .preset-btn.active {
   background: var(--color-primary-glow);
-  color: var(--color-primary-light);
-  border-color: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .crop-workspace-container {
   flex-grow: 1;
-  background-color: #06070a;
+  background-color: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -64,7 +64,7 @@
   max-height: 100%;
   position: relative;
   display: inline-block;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
 }
 
 .crop-target-image {
@@ -81,21 +81,21 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.4);
 }
 
 .crop-visible-box {
   position: absolute;
   cursor: move;
   border: 2px solid #fff;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 15px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.4), 0 0 15px rgba(26, 115, 232, 0.4);
   box-sizing: border-box;
 }
 
 /* Rule of Thirds grid lines inside crop box */
 .crop-grid-line {
   position: absolute;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.35);
   pointer-events: none;
 }
 
@@ -112,7 +112,7 @@
   background: #fff;
   border: 2.5px solid var(--color-primary);
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
   z-index: 10;
   box-sizing: border-box;
 }
@@ -128,7 +128,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(0,0,0,0.15);
+  background: #f8fafc;
 }
 
 .crop-info-meta {
@@ -143,7 +143,7 @@
 }
 
 .btn-secondary {
-  background: rgba(255,255,255,0.03);
+  background: #ffffff;
   border: 1px solid var(--color-border);
   color: var(--color-text-main);
   font-family: var(--font-family);
@@ -156,8 +156,8 @@
 }
 
 .btn-secondary:hover {
-  background: rgba(255,255,255,0.08);
-  color: #fff;
+  background: #f1f5f9;
+  color: var(--color-text-main);
 }
 
 .btn-primary {
@@ -175,7 +175,7 @@
 
 .btn-primary:hover {
   background: var(--color-primary-light);
-  box-shadow: 0 4px 15px var(--color-primary-glow);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2);
 }
 
 /* Crop Modal responsiveness */

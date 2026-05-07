@@ -16,58 +16,160 @@ export default function Dashboard() {
   const [isCompiling, setIsCompiling] = useState(false);
   const [compileStep, setCompileStep] = useState('');
   const [compileSuccess, setCompileSuccess] = useState(false);
+  
+  // Compiler settings
   const [pageSizeSetting, setPageSizeSetting] = useState('original'); // 'original', 'a4', or 'letter'
   const [marginSetting, setMarginSetting] = useState('standard'); // 'none', 'thin', or 'standard'
+  const [qualitySetting, setQualitySetting] = useState('original'); // 'original', 'balanced', 'compact'
+  const [watermarkText, setWatermarkText] = useState('');
+  const [watermarkColor, setWatermarkColor] = useState('#9ca3af');
+  const [watermarkOpacity, setWatermarkOpacity] = useState(0.25);
+  const [watermarkSize, setWatermarkSize] = useState(48);
+  const [addPageNumbers, setAddPageNumbers] = useState(false);
+  const [pageNumberPosition, setPageNumberPosition] = useState('center'); // 'left', 'center', 'right', 'top-right'
+  const [pdfFilename, setPdfFilename] = useState('Indocreonix_Compiled');
 
   // Clean up object URLs on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
+      const urlsToRevoke = new Set();
       images.forEach(img => {
-        if (img.previewUrl) URL.revokeObjectURL(img.previewUrl);
-        if (img.croppedUrl && img.croppedUrl.startsWith('blob:')) URL.revokeObjectURL(img.croppedUrl);
+        if (img.previewUrl) urlsToRevoke.add(img.previewUrl);
+        if (img.croppedUrl && img.croppedUrl.startsWith('blob:')) urlsToRevoke.add(img.croppedUrl);
       });
+      urlsToRevoke.forEach(url => URL.revokeObjectURL(url));
     };
   }, []);
 
-  // Handle adding new files
-  const handleImagesSelected = (validImageFiles) => {
-    validImageFiles.forEach(file => {
-      const previewUrl = URL.createObjectURL(file);
-      const img = new Image();
-      img.src = previewUrl;
-      img.onload = () => {
-        const newImageObj = {
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          file: file,
-          previewUrl: previewUrl,
-          croppedUrl: null,
-          cropBoxPercent: null,
-          originalWidth: img.naturalWidth,
-          originalHeight: img.naturalHeight,
-          width: img.naturalWidth,
-          height: img.naturalHeight
-        };
-        setImages(prev => [...prev, newImageObj]);
-      };
-    });
+  // Handle adding new files (Images and PDFs)
+  const handleImagesSelected = async (validFiles) => {
+    setIsCompiling(true);
+    setCompileStep('Analyzing and rendering imported files...');
+
+    // Sort files chronologically by default to match physical folder organization
+    const sortedFiles = [...validFiles].sort((a, b) => (a.lastModified || 0) - (b.lastModified || 0));
+
+    try {
+      for (const file of sortedFiles) {
+        if (file.type === 'application/pdf') {
+          // Process existing PDF document client-side
+          const arrayBuffer = await file.arrayBuffer();
+          const pdfjsLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+          
+          if (!pdfjsLib) {
+            throw new Error('PDF.js library is not loaded. Please ensure you are connected to the internet.');
+          }
+
+          // Point to cdnjs worker
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+          const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          const pdf = await loadingTask.promise;
+
+          for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            setCompileStep(`Decompiling & rendering page ${pageNum} of ${pdf.numPages} from [${file.name}]...`);
+            
+            const page = await pdf.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 1.5 }); // High-DPI canvas render
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            await page.render({
+              canvasContext: context,
+              viewport: viewport
+            }).promise;
+
+            const pageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            const previewUrl = URL.createObjectURL(pageBlob);
+
+            const newPdfPageObj = {
+              id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              name: `${file.name} (Pg ${pageNum}/${pdf.numPages})`,
+              size: Math.round(file.size / pdf.numPages), // Approximated per-page file size
+              type: 'application/pdf',
+              previewUrl: previewUrl,
+              croppedUrl: null,
+              cropBoxPercent: null,
+              originalWidth: Math.round(viewport.width),
+              originalHeight: Math.round(viewport.height),
+              width: Math.round(viewport.width),
+              height: Math.round(viewport.height),
+              isPdfPage: true,
+              pdfSource: arrayBuffer,
+              pageIndex: pageNum - 1,
+              rotation: 0,
+              lastModified: file.lastModified || Date.now()
+            };
+
+            setImages(prev => [...prev, newPdfPageObj]);
+          }
+        } else {
+          // Process standard image file
+          const previewUrl = URL.createObjectURL(file);
+          
+          await new Promise((resolve) => {
+            const img = new Image();
+            img.src = previewUrl;
+            img.onload = () => {
+              const newImageObj = {
+                id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                file: file,
+                previewUrl: previewUrl,
+                croppedUrl: null,
+                cropBoxPercent: null,
+                originalWidth: img.naturalWidth,
+                originalHeight: img.naturalHeight,
+                width: img.naturalWidth,
+                height: img.naturalHeight,
+                rotation: 0,
+                lastModified: file.lastModified || Date.now()
+              };
+              setImages(prev => [...prev, newImageObj]);
+              resolve();
+            };
+            img.onerror = () => {
+              console.error('Failed to load image preview');
+              resolve();
+            };
+          });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error importing file: ' + err.message);
+    } finally {
+      setIsCompiling(false);
+      setCompileStep('');
+    }
   };
 
-  // Remove an image from the queue
+  // Remove an image from the queue with duplicate protection
   const handleRemoveImage = (id) => {
     setImages(prev => {
       const target = prev.find(img => img.id === id);
+      const remaining = prev.filter(img => img.id !== id);
+      
       if (target) {
-        if (target.previewUrl) URL.revokeObjectURL(target.previewUrl);
-        if (target.croppedUrl && target.croppedUrl.startsWith('blob:')) URL.revokeObjectURL(target.croppedUrl);
+        // Prevent revoking if another page card is still referencing the same source
+        const isPreviewUsed = remaining.some(img => img.previewUrl === target.previewUrl);
+        const isCroppedUsed = remaining.some(img => img.croppedUrl === target.croppedUrl);
+
+        if (target.previewUrl && !isPreviewUsed) URL.revokeObjectURL(target.previewUrl);
+        if (target.croppedUrl && target.croppedUrl.startsWith('blob:') && !isCroppedUsed) {
+          URL.revokeObjectURL(target.croppedUrl);
+        }
       }
-      return prev.filter(img => img.id !== id);
+      return remaining;
     });
   };
 
-  // Reordering queues
+  // Reordering queue handlers
   const handleMoveUp = (index) => {
     if (index === 0) return;
     setImages(prev => {
@@ -86,6 +188,38 @@ export default function Dashboard() {
       const temp = updated[index];
       updated[index] = updated[index + 1];
       updated[index + 1] = temp;
+      return updated;
+    });
+  };
+
+  // Rotate a page 90 degrees clockwise
+  const handleRotatePage = (id) => {
+    setImages(prev => prev.map(img => {
+      if (img.id === id) {
+        return {
+          ...img,
+          rotation: ((img.rotation || 0) + 90) % 360
+        };
+      }
+      return img;
+    }));
+  };
+
+  // Duplicate page inside queue
+  const handleDuplicatePage = (id) => {
+    setImages(prev => {
+      const index = prev.findIndex(img => img.id === id);
+      if (index === -1) return prev;
+      
+      const target = prev[index];
+      const duplicatedItem = {
+        ...target,
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: target.name.includes('(Copy)') ? target.name : `${target.name} (Copy)`
+      };
+
+      const updated = [...prev];
+      updated.splice(index + 1, 0, duplicatedItem);
       return updated;
     });
   };
@@ -109,9 +243,12 @@ export default function Dashboard() {
         targetImage.type
       );
 
-      // Clean up previous crop URL
+      // Clean up previous crop URL if not used by others
       if (targetImage.croppedUrl && targetImage.croppedUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(targetImage.croppedUrl);
+        const isCroppedUsedByOthers = images.some(img => img.id !== activeCropId && img.croppedUrl === targetImage.croppedUrl);
+        if (!isCroppedUsedByOthers) {
+          URL.revokeObjectURL(targetImage.croppedUrl);
+        }
       }
 
       const croppedUrl = URL.createObjectURL(blob);
@@ -147,7 +284,10 @@ export default function Dashboard() {
     setImages(prev => prev.map(img => {
       if (img.id === id) {
         if (img.croppedUrl && img.croppedUrl.startsWith('blob:')) {
-          URL.revokeObjectURL(img.croppedUrl);
+          const isCroppedUsedByOthers = prev.some(item => item.id !== id && item.croppedUrl === img.croppedUrl);
+          if (!isCroppedUsedByOthers) {
+            URL.revokeObjectURL(img.croppedUrl);
+          }
         }
         return {
           ...img,
@@ -164,12 +304,31 @@ export default function Dashboard() {
 
   // Queue reset
   const handleResetQueue = () => {
+    const urlsToRevoke = new Set();
     images.forEach(img => {
-      if (img.previewUrl) URL.revokeObjectURL(img.previewUrl);
-      if (img.croppedUrl && img.croppedUrl.startsWith('blob:')) URL.revokeObjectURL(img.croppedUrl);
+      if (img.previewUrl) urlsToRevoke.add(img.previewUrl);
+      if (img.croppedUrl && img.croppedUrl.startsWith('blob:')) urlsToRevoke.add(img.croppedUrl);
     });
+    urlsToRevoke.forEach(url => URL.revokeObjectURL(url));
     setImages([]);
     setCompileSuccess(false);
+  };
+  // Sort and Reverse Queue
+  const handleSortQueue = (field) => {
+    setImages(prev => {
+      const sorted = [...prev].sort((a, b) => {
+        if (field === 'date') {
+          return (a.lastModified || 0) - (b.lastModified || 0);
+        } else {
+          return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+        }
+      });
+      return sorted;
+    });
+  };
+
+  const handleReverseQueue = () => {
+    setImages(prev => [...prev].reverse());
   };
 
   // Compile Trigger
@@ -180,7 +339,20 @@ export default function Dashboard() {
     setCompileSuccess(false);
 
     try {
-      await generateClientPDF(images, pageSizeSetting, marginSetting, setCompileStep);
+      const compilerSettings = {
+        pageSizeSetting,
+        marginSetting,
+        qualitySetting,
+        watermarkText,
+        watermarkColor,
+        watermarkOpacity,
+        watermarkSize,
+        addPageNumbers,
+        pageNumberPosition,
+        pdfFilename
+      };
+
+      await generateClientPDF(images, compilerSettings, setCompileStep);
       setCompileSuccess(true);
       setTimeout(() => setCompileSuccess(false), 5000);
     } catch (err) {
@@ -219,6 +391,10 @@ export default function Dashboard() {
             onMoveDown={handleMoveDown}
             onUndoCrop={handleUndoCrop}
             onReset={handleResetQueue}
+            onRotate={handleRotatePage}
+            onDuplicate={handleDuplicatePage}
+            onSort={handleSortQueue}
+            onReverse={handleReverseQueue}
           />
 
           {images.length > 0 && (
@@ -227,6 +403,22 @@ export default function Dashboard() {
               setPageSizeSetting={setPageSizeSetting}
               marginSetting={marginSetting}
               setMarginSetting={setMarginSetting}
+              qualitySetting={qualitySetting}
+              setQualitySetting={setQualitySetting}
+              watermarkText={watermarkText}
+              setWatermarkText={setWatermarkText}
+              watermarkColor={watermarkColor}
+              setWatermarkColor={setWatermarkColor}
+              watermarkOpacity={watermarkOpacity}
+              setWatermarkOpacity={setWatermarkOpacity}
+              watermarkSize={watermarkSize}
+              setWatermarkSize={setWatermarkSize}
+              addPageNumbers={addPageNumbers}
+              setAddPageNumbers={setAddPageNumbers}
+              pageNumberPosition={pageNumberPosition}
+              setPageNumberPosition={setPageNumberPosition}
+              pdfFilename={pdfFilename}
+              setPdfFilename={setPdfFilename}
               isCompiling={isCompiling}
               compileStep={compileStep}
               compileSuccess={compileSuccess}
