@@ -438,10 +438,10 @@ export default function Dashboard() {
       
       if (target.croppedUrl) {
         await saveFileToDB(`${id}_croppedFile`, rotatedFile);
-        setImages(prev => prev.map(img => img.id === id ? { ...img, croppedUrl: newUrl, croppedFile: rotatedFile, width, height, rotation: 0 } : img));
+        setImages(prev => prev.map(img => img.id === id ? { ...img, croppedUrl: newUrl, croppedFile: rotatedFile, type: 'image/png', width, height, rotation: 0 } : img));
       } else {
         await saveFileToDB(`${id}_file`, rotatedFile);
-        setImages(prev => prev.map(img => img.id === id ? { ...img, previewUrl: newUrl, file: rotatedFile, width, height, rotation: 0 } : img));
+        setImages(prev => prev.map(img => img.id === id ? { ...img, previewUrl: newUrl, file: rotatedFile, type: 'image/png', width, height, rotation: 0 } : img));
       }
     } catch (err) {
       console.error('Physical rotation failed:', err);

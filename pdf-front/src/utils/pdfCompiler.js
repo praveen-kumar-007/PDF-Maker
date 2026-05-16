@@ -259,7 +259,7 @@ export const generateClientPDF = async (images, settings, setStep, onProgress) =
             `Optimizing image data for page ${i + 1}...`
           );
           const fallbackBytes = await convertImageToCompatibleBytes(compileUrl, isPng);
-          pdfImage = await pdfDoc.embedPng(fallbackBytes);
+          pdfImage = isPng ? await pdfDoc.embedPng(fallbackBytes) : await pdfDoc.embedJpg(fallbackBytes);
         }
       }
 
