@@ -229,38 +229,19 @@ export const generateClientPDF = async (images, settings, setStep, onProgress) =
         }
       }
 
-      // If compression was original or failed, load original file bytes
+      // Always normalize images through canvas to ensure EXIF orientation is baked into pixels
       if (!pdfImage) {
-        let arrayBuffer;
-        const rawFile = (createdRotatedUrl || filterAppliedUrl) ? null : (img.croppedFile || img.file);
-        if (rawFile) {
-          try {
-            arrayBuffer = await rawFile.arrayBuffer();
-          } catch (arrayBufferErr) {
-            console.warn('Direct ArrayBuffer load failed, trying fetch fallback:', arrayBufferErr);
-            const response = await fetch(compileUrl);
-            arrayBuffer = await response.arrayBuffer();
-          }
-        } else {
-          const response = await fetch(compileUrl);
-          arrayBuffer = await response.arrayBuffer();
-        }
-        const imageBytes = new Uint8Array(arrayBuffer);
-
+        updateProgress(
+          Math.round(baseline + size * 0.8),
+          `Standardizing raw bytes for [${img.name}]...`,
+          `Optimizing image data for page ${i + 1}...`
+        );
         try {
-          if (isPng) {
-            pdfImage = await pdfDoc.embedPng(imageBytes);
-          } else {
-            pdfImage = await pdfDoc.embedJpg(imageBytes);
-          }
-        } catch (embedError) {
-          updateProgress(
-            Math.round(baseline + size * 0.8),
-            `Standardizing raw bytes for [${img.name}]...`,
-            `Optimizing image data for page ${i + 1}...`
-          );
           const fallbackBytes = await convertImageToCompatibleBytes(compileUrl, isPng);
           pdfImage = isPng ? await pdfDoc.embedPng(fallbackBytes) : await pdfDoc.embedJpg(fallbackBytes);
+        } catch (embedError) {
+          console.error('Failed to embed image:', embedError);
+          throw new Error(`Failed to process image data for ${img.name}`);
         }
       }
 
