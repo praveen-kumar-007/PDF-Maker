@@ -27,7 +27,6 @@ export const formatBytes = (bytes, decimals = 2) => {
 export const convertImageToCompatibleBytes = (srcUrl, isPng) => {
   return new Promise((resolve, reject) => {
     const imgObj = new Image();
-    imgObj.crossOrigin = 'anonymous';
     imgObj.src = srcUrl;
     imgObj.onload = () => {
       const canvas = document.createElement('canvas');
@@ -60,7 +59,6 @@ export const convertImageToCompatibleBytes = (srcUrl, isPng) => {
 export const cropImageAtResolution = (srcUrl, cropBox, fileType) => {
   return new Promise((resolve, reject) => {
     const imgObj = new Image();
-    imgObj.crossOrigin = 'anonymous';
     imgObj.src = srcUrl;
     imgObj.onload = () => {
       const naturalWidth = imgObj.naturalWidth;
@@ -111,7 +109,6 @@ export const cropImageAtResolution = (srcUrl, cropBox, fileType) => {
 export const compressImage = (srcUrl, quality = 0.8, maxDimension = null) => {
   return new Promise((resolve, reject) => {
     const imgObj = new Image();
-    imgObj.crossOrigin = 'anonymous';
     imgObj.src = srcUrl;
     imgObj.onload = () => {
       let width = imgObj.naturalWidth;
@@ -158,7 +155,6 @@ export const compressImage = (srcUrl, quality = 0.8, maxDimension = null) => {
 export const compressImageToTargetSize = (srcUrl, targetBytes) => {
   return new Promise((resolve, reject) => {
     const imgObj = new Image();
-    imgObj.crossOrigin = 'anonymous';
     imgObj.src = srcUrl;
     imgObj.onload = async () => {
       const originalWidth = imgObj.naturalWidth;
@@ -251,7 +247,6 @@ export const rotateImageAtResolution = (srcUrl, rotationAngle) => {
     }
 
     const imgObj = new Image();
-    imgObj.crossOrigin = 'anonymous';
     imgObj.src = srcUrl;
     imgObj.onload = () => {
       const angleRad = (rotationAngle * Math.PI) / 180;
@@ -299,7 +294,6 @@ export const applyScannerFilterToImage = (srcUrl, filterType) => {
     }
 
     const imgObj = new Image();
-    imgObj.crossOrigin = 'anonymous';
     imgObj.src = srcUrl;
     imgObj.onload = () => {
       const canvas = document.createElement('canvas');

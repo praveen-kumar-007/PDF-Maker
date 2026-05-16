@@ -5,7 +5,7 @@ import ImageGrid from '../components/ImageGrid';
 import CompilerSettings from '../components/CompilerSettings';
 import CropModal from '../components/CropModal';
 import PreviewModal from '../components/PreviewModal';
-import { cropImageAtResolution } from '../utils/imageHelpers';
+import { cropImageAtResolution, rotateImageAtResolution } from '../utils/imageHelpers';
 import { generateClientPDF } from '../utils/pdfCompiler';
 import { 
   saveFileToDB, 
