@@ -127,7 +127,8 @@ export const generateClientPDF = async (images, settings, setStep, onProgress) =
 
           // Rotate page
           if (img.rotation) {
-            newPage.setRotation(degrees(img.rotation));
+            const currentRotation = tempPage.getRotation().angle;
+            newPage.setRotation(degrees((currentRotation + img.rotation) % 360));
           }
         }
       } catch (pdfPageErr) {
