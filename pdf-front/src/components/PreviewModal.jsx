@@ -4,6 +4,7 @@ import '../styles/PreviewModal.css';
 export default function PreviewModal({ 
   imgSrc, 
   imgName, 
+  rotation = 0,
   onClose 
 }) {
   return (
@@ -19,11 +20,18 @@ export default function PreviewModal({
             <X size={20} />
           </button>
         </div>
-        <div className="preview-workspace">
+        <div className="preview-workspace" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
           <img 
             src={imgSrc} 
             alt="Full resolution preview"
             className="preview-full-img" 
+            style={{ 
+              transform: `rotate(${rotation}deg)`,
+              transition: 'transform 0.3s ease',
+              maxWidth: '100%',
+              maxHeight: '75vh',
+              objectFit: 'contain'
+            }}
           />
         </div>
       </div>

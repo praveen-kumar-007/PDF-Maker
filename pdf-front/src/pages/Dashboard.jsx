@@ -407,19 +407,49 @@ export default function Dashboard() {
   };
 
   // Rotate a page 90 degrees clockwise or anticlockwise
-  const handleRotatePage = (id, direction = 'clockwise') => {
-    setImages(prev => prev.map(img => {
-      if (img.id === id) {
-        const delta = direction === 'clockwise' ? 90 : -90;
-        let nextRotation = ((img.rotation || 0) + delta) % 360;
-        if (nextRotation < 0) nextRotation += 360;
-        return {
-          ...img,
-          rotation: nextRotation
-        };
+  const handleRotatePage = async (id, direction = 'clockwise') => {
+    const target = images.find(img => img.id === id);
+    if (!target) return;
+
+    if (target.isPdfPage) {
+      // PDF pages still use logical rotation
+      setImages(prev => prev.map(img => {
+        if (img.id === id) {
+          const delta = direction === 'clockwise' ? 90 : -90;
+          let nextRotation = ((img.rotation || 0) + delta) % 360;
+          if (nextRotation < 0) nextRotation += 360;
+          return { ...img, rotation: nextRotation };
+        }
+        return img;
+      }));
+      return;
+    }
+
+    try {
+      setIsCompiling(true);
+      setCompileStep(`Physically rotating ${target.name}...`);
+      
+      const angle = direction === 'clockwise' ? 90 : 270;
+      const sourceUrl = target.croppedUrl || target.previewUrl;
+      const { blob, width, height } = await rotateImageAtResolution(sourceUrl, angle);
+      
+      const newUrl = URL.createObjectURL(blob);
+      const rotatedFile = new File([blob], target.name, { type: 'image/png' });
+      
+      if (target.croppedUrl) {
+        await saveFileToDB(`${id}_croppedFile`, rotatedFile);
+        setImages(prev => prev.map(img => img.id === id ? { ...img, croppedUrl: newUrl, croppedFile: rotatedFile, width, height, rotation: 0 } : img));
+      } else {
+        await saveFileToDB(`${id}_file`, rotatedFile);
+        setImages(prev => prev.map(img => img.id === id ? { ...img, previewUrl: newUrl, file: rotatedFile, width, height, rotation: 0 } : img));
       }
-      return img;
-    }));
+    } catch (err) {
+      console.error('Physical rotation failed:', err);
+      setError('Failed to rotate image pixels.');
+    } finally {
+      setIsCompiling(false);
+      setCompileStep('');
+    }
   };
 
   // Duplicate page inside queue
@@ -810,6 +840,7 @@ export default function Dashboard() {
         <PreviewModal 
           imgSrc={activePreviewImage.croppedUrl || activePreviewImage.previewUrl}
           imgName={activePreviewImage.name}
+          rotation={activePreviewImage.rotation || 0}
           onClose={() => setActivePreviewId(null)}
         />
       )}
